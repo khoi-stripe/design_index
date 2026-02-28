@@ -1,0 +1,12 @@
+{
+  "name": "Index — Pattern Library",
+  "id": "index-pattern-library",
+  "api": "1.0.0",
+  "main": "dist/main.js",
+  "ui": "dist/index.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:3000", "http://localhost:3001"],
+    "reasoning": "Syncs tagged patterns with the Index pattern library backend"
+  }
+}

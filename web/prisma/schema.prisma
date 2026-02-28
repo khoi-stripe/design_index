@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Pattern {
+  id            String   @id @default(uuid())
+  title         String
+  description   String   @default("")
+  figmaFileKey  String   @default("")
+  figmaNodeId   String   @default("")
+  figmaDeepLink String   @default("")
+  figmaPageName String   @default("")
+  screenshotUrl String   @default("")
+  thumbnailUrl  String   @default("")
+  authorName    String   @default("")
+  authorAvatar  String   @default("")
+  status        String   @default("published")
+  featured      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tags               PatternTag[]
+  collectionPatterns CollectionPattern[]
+}
+
+model Tag {
+  id       String @id @default(uuid())
+  name     String @unique
+  slug     String @unique
+  category String @default("general")
+
+  patterns PatternTag[]
+}
+
+model PatternTag {
+  patternId String
+  tagId     String
+  pattern   Pattern @relation(fields: [patternId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([patternId, tagId])
+}
+
+model Collection {
+  id          String @id @default(uuid())
+  name        String
+  slug        String @unique
+  description String @default("")
+  coverUrl    String @default("")
+
+  patterns CollectionPattern[]
+}
+
+model CollectionPattern {
+  collectionId String
+  patternId    String
+  sortOrder    Int        @default(0)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  pattern      Pattern    @relation(fields: [patternId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, patternId])
+}

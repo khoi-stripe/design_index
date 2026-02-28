@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0b10;
+  --foreground: #ededf0;
+  --accent: #7a73ff;
+  --accent-light: #9590ff;
+  --accent-bg: #1a1830;
+  --border: #1f1f2e;
+  --muted: #7c7c8e;
+  --card-bg: #131318;
+  --card-hover: #1a1a22;
+  --tag-bg: #1c1c2a;
+  --tag-text: #a8a8c0;
+  --surface: #131318;
+  --surface-hover: #1a1a22;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-bg: var(--accent-bg);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-card-bg: var(--card-bg);
+  --color-card-hover: var(--card-hover);
+  --color-tag-bg: var(--tag-bg);
+  --color-tag-text: var(--tag-text);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}

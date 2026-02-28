@@ -1,0 +1,7 @@
+node_modules/
+.next/
+.env
+*.db
+web/public/uploads/*.png
+web/src/generated/
+figma-plugin/dist/
