@@ -75,7 +75,7 @@ export function DateRangePicker({
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground transition-colors"
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${isOpen ? "text-foreground bg-background border !border-border" : ""}`}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="3" y="4" width="18" height="18" rx="2" />

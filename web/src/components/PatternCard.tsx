@@ -126,7 +126,7 @@ export function PatternCard({
         </div>
         <div className="bg-black p-4 flex items-center gap-3">
           <div className="flex-1 min-w-0 flex flex-col gap-2">
-            <h3 className="font-semibold text-sm text-foreground leading-tight tracking-tight">
+            <h3 className="font-medium text-sm text-foreground leading-tight tracking-tight">
               {pattern.title}
             </h3>
           {pattern.tags.length > 0 && (

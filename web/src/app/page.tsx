@@ -127,10 +127,13 @@ export default function HomePage() {
       const isStuck = y + 60 > filterNaturalTop;
       const scrollingUp = y < lastScrollY.current;
 
-      if (!isStuck) {
-        setFilterSticky(true);
-      } else {
-        setFilterSticky(scrollingUp);
+      const shouldShow = !isStuck || scrollingUp;
+      setFilterSticky(shouldShow);
+      if (!shouldShow) {
+        setShowFilterMenu(false);
+        setMenuVisible(false);
+        setMenuClosing(false);
+        setShowDatePicker(false);
       }
       lastScrollY.current = y;
     };
@@ -190,7 +193,7 @@ export default function HomePage() {
               <div className="relative inline-block">
                 <button
                   onClick={toggleMenu}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground transition-colors"
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showFilterMenu ? "text-foreground bg-background border !border-border" : ""}`}
                 >
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                     <path
