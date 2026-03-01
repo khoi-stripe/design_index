@@ -6,6 +6,7 @@ type Suggestion = {
   type: string;
   label: string;
   value: string;
+  avatar?: string;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -133,19 +134,28 @@ export function SearchBar({
       )}
 
       {open && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg overflow-hidden shadow-lg z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 p-2">
           {suggestions.map((s, i) => (
             <button
               key={`${s.type}-${s.value}`}
               onMouseDown={() => selectSuggestion(s)}
               onMouseEnter={() => setActiveIndex(i)}
-              className={`w-full text-left px-3 py-2 flex items-center justify-between text-sm transition-colors ${
+              className={`w-full text-left px-3 py-2 flex items-center justify-between text-sm rounded-[4px] transition-colors ${
                 i === activeIndex
                   ? "bg-surface-hover text-foreground"
                   : "text-foreground"
               }`}
             >
-              <span className="truncate">{s.label}</span>
+              <span className="flex items-center gap-2 truncate">
+                {s.avatar ? (
+                  <img src={s.avatar} alt="" className="w-5 h-5 rounded-full shrink-0" />
+                ) : s.type === "author" ? (
+                  <span className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center text-accent text-[10px] font-medium shrink-0">
+                    {s.label.charAt(0)}
+                  </span>
+                ) : null}
+                <span className="truncate">{s.label}</span>
+              </span>
               <span className="text-[10px] font-medium text-muted ml-3 shrink-0">
                 {TYPE_LABELS[s.type] || s.type}
               </span>

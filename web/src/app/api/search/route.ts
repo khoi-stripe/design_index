@@ -21,13 +21,13 @@ export async function GET(request: NextRequest) {
     }),
     prisma.pattern.findMany({
       where: { authorName: { contains: q }, status: "published" },
-      select: { authorName: true },
+      select: { authorName: true, authorAvatar: true },
       distinct: ["authorName"],
       take: 5,
     }),
   ]);
 
-  const suggestions: { type: string; label: string; value: string }[] = [];
+  const suggestions: { type: string; label: string; value: string; avatar?: string }[] = [];
 
   for (const t of tags) {
     suggestions.push({ type: "tag", label: t.name, value: t.name });
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   }
   for (const a of authors) {
     if (a.authorName) {
-      suggestions.push({ type: "author", label: a.authorName, value: a.authorName });
+      suggestions.push({ type: "author", label: a.authorName, value: a.authorName, avatar: a.authorAvatar || undefined });
     }
   }
 
