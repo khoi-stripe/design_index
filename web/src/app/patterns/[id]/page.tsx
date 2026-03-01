@@ -782,9 +782,11 @@ export default function PatternDetailPage() {
                   )}
 
                   <div>
-                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Added</h3>
+                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">
+                      {pattern.updatedAt && pattern.updatedAt !== pattern.createdAt ? "Updated" : "Added"}
+                    </h3>
                     <p className="text-sm text-foreground">
-                      {new Date(pattern.createdAt).toLocaleDateString("en-US", {
+                      {new Date(pattern.updatedAt || pattern.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
