@@ -16,6 +16,7 @@ export function PatternCard({
   const router = useRouter();
   const [showAvatarTooltip, setShowAvatarTooltip] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const allImages = useMemo(() => {
     const primary = {
@@ -37,12 +38,14 @@ export function PatternCard({
   const goNext = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setImageLoaded(false);
     setActiveIndex((i) => (i + 1) % allImages.length);
   };
 
   const goPrev = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setImageLoaded(false);
     setActiveIndex((i) => (i - 1 + allImages.length) % allImages.length);
   };
 
@@ -62,15 +65,19 @@ export function PatternCard({
           className="relative aspect-square flex items-center justify-center p-5 transition-colors duration-300"
           style={{ backgroundColor: bgColor }}
         >
+          {!imageLoaded && imgSrc && (
+            <div className="absolute inset-0 bg-surface animate-pulse" />
+          )}
           {imgSrc ? (
             <Image
               key={imgSrc}
               src={imgSrc}
               alt={pattern.title}
               fill
-              className="object-contain p-5 group-hover:scale-[1.02] transition-transform duration-300 animate-in fade-in duration-200"
+              className={`object-contain p-5 group-hover:scale-[1.02] transition-all duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority={priority && activeIndex === 0}
+              onLoad={() => setImageLoaded(true)}
             />
           ) : (
             <div className="flex items-center justify-center text-muted/30">

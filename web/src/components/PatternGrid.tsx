@@ -1,32 +1,64 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { PatternCard } from "./PatternCard";
 import type { Pattern } from "@/lib/types";
+
+function LoadingSkeletons({ count = 9 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="animate-pulse">
+          <div className="rounded-[4px] overflow-hidden">
+            <div className="aspect-square bg-surface" />
+            <div className="bg-black p-4 space-y-2">
+              <div className="h-4 bg-surface rounded w-3/4" />
+              <div className="flex gap-1">
+                <div className="h-5 bg-surface rounded w-16" />
+                <div className="h-5 bg-surface rounded w-12" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
 
 export function PatternGrid({
   patterns,
   loading,
+  hasMore,
+  loadingMore,
+  onLoadMore,
 }: {
   patterns: Pattern[];
   loading?: boolean;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || loading) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) onLoadMore();
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore, loading]);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="rounded-[4px] overflow-hidden">
-              <div className="aspect-square bg-surface" />
-              <div className="bg-black p-4 space-y-2">
-                <div className="h-4 bg-surface rounded w-3/4" />
-                <div className="flex gap-1">
-                  <div className="h-5 bg-surface rounded w-16" />
-                  <div className="h-5 bg-surface rounded w-12" />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+        <LoadingSkeletons />
       </div>
     );
   }
@@ -46,10 +78,14 @@ export function PatternGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 isolate">
-      {patterns.map((pattern, i) => (
-        <PatternCard key={pattern.id} pattern={pattern} priority={i < 3} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 isolate">
+        {patterns.map((pattern, i) => (
+          <PatternCard key={pattern.id} pattern={pattern} priority={i < 3} />
+        ))}
+        {loadingMore && <LoadingSkeletons count={3} />}
+      </div>
+      {hasMore && <div ref={sentinelRef} className="h-px" />}
+    </>
   );
 }

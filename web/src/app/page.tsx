@@ -47,6 +47,9 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 24;
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // undefined = "All time"
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -94,19 +97,35 @@ export default function HomePage() {
     setSearch(searchParams.get("search") || "");
   }, [searchParams]);
 
-  const fetchPatterns = useCallback(async () => {
-    setLoading(true);
+  const buildParams = useCallback((offset = 0) => {
     const params = new URLSearchParams();
     if (activeCategory) params.set("category", activeCategory);
     if (search) params.set("search", search);
     if (dateRange?.from) params.set("dateFrom", format(dateRange.from, "yyyy-MM-dd"));
     if (dateRange?.to) params.set("dateTo", format(dateRange.to, "yyyy-MM-dd"));
+    params.set("limit", String(PAGE_SIZE));
+    params.set("offset", String(offset));
+    return params;
+  }, [activeCategory, search, dateRange]);
 
-    const res = await fetch(`/api/patterns?${params}`);
+  const fetchPatterns = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/patterns?${buildParams(0)}`);
     const data = await res.json();
     setPatterns(data.patterns);
+    setTotal(data.total);
     setLoading(false);
-  }, [activeCategory, search, dateRange]);
+  }, [buildParams]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || patterns.length >= total) return;
+    setLoadingMore(true);
+    const res = await fetch(`/api/patterns?${buildParams(patterns.length)}`);
+    const data = await res.json();
+    setPatterns((prev) => [...prev, ...data.patterns]);
+    setTotal(data.total);
+    setLoadingMore(false);
+  }, [buildParams, patterns.length, total, loadingMore]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchPatterns, search ? 300 : 0);
@@ -247,7 +266,13 @@ export default function HomePage() {
             </div>
           </div>
 
-          <PatternGrid patterns={patterns} loading={loading} />
+          <PatternGrid
+            patterns={patterns}
+            loading={loading}
+            hasMore={patterns.length < total}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
+          />
         </div>
       </main>
     </div>
