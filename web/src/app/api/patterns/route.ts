@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { ensureTags } from "@/lib/tags";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -10,8 +11,8 @@ export async function GET(request: NextRequest) {
   const featured = searchParams.get("featured");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
-  const limit = parseInt(searchParams.get("limit") || "50");
-  const offset = parseInt(searchParams.get("offset") || "0");
+  const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "50") || 50));
+  const offset = Math.max(0, parseInt(searchParams.get("offset") || "0") || 0);
 
   const where: Record<string, unknown> = {};
 
@@ -70,7 +71,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, dominantColor, authorName, authorAvatar, tags, category, additionalImages } = body;
 
   if (!title) {
@@ -82,20 +88,7 @@ export async function POST(request: NextRequest) {
       ? `https://www.figma.com/design/${figmaFileKey}?node-id=${encodeURIComponent(figmaNodeId)}`
       : "";
 
-  const resolvedTags: { tagId: string }[] = [];
-  if (tags?.length) {
-    for (const tagSlug of tags as string[]) {
-      const tag = await prisma.tag.upsert({
-        where: { slug: tagSlug },
-        update: {},
-        create: {
-          name: tagSlug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-          slug: tagSlug,
-        },
-      });
-      resolvedTags.push({ tagId: tag.id });
-    }
-  }
+  const resolvedTags = tags?.length ? await ensureTags(tags as string[]) : [];
 
   const pattern = await prisma.pattern.create({
     data: {

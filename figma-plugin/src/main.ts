@@ -113,37 +113,6 @@ figma.ui.onmessage = async (msg) => {
     await captureCurrentNode();
   }
 
-  // Legacy single capture
-  if (msg.type === "capture-screenshot") {
-    const selection = figma.currentPage.selection;
-    if (selection.length === 0) {
-      figma.ui.postMessage({ type: "screenshot-error", error: "No selection" });
-      return;
-    }
-
-    const node = selection[0];
-    if (!("exportAsync" in node)) {
-      figma.ui.postMessage({
-        type: "screenshot-error",
-        error: "Selected node cannot be exported",
-      });
-      return;
-    }
-
-    try {
-      const bytes = await node.exportAsync({
-        format: "PNG",
-        constraint: { type: "SCALE", value: 2 },
-      });
-      figma.ui.postMessage({ type: "screenshot", data: bytes });
-    } catch (e) {
-      figma.ui.postMessage({
-        type: "screenshot-error",
-        error: String(e),
-      });
-    }
-  }
-
   if (msg.type === "save-tags") {
     const selection = figma.currentPage.selection;
     if (selection.length === 0) return;

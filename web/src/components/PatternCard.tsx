@@ -4,37 +4,13 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-type PatternImage = {
-  id: string;
-  screenshotUrl: string;
-  thumbnailUrl: string;
-  dominantColor: string;
-};
-
-type Pattern = {
-  id: string;
-  title: string;
-  description: string;
-  screenshotUrl: string;
-  thumbnailUrl: string;
-  dominantColor: string;
-  authorName: string;
-  authorAvatar: string;
-  figmaDeepLink: string;
-  featured: boolean;
-  createdAt: string;
-  tags: { tag: { id: string; name: string; slug: string } }[];
-  images?: PatternImage[];
-};
+import type { Pattern } from "@/lib/types";
 
 export function PatternCard({
   pattern,
-  index = 0,
   priority = false,
 }: {
   pattern: Pattern;
-  index?: number;
   priority?: boolean;
 }) {
   const router = useRouter();
@@ -71,15 +47,17 @@ export function PatternCard({
   };
 
   return (
-    <Link href={`/patterns/${pattern.id}`} className="group block relative">
+    <Link href={`/patterns/${pattern.id}`} className="group block relative hover:z-10">
       <div
-        className="absolute -inset-2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        className="absolute -inset-4 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
           background: "radial-gradient(circle at center, #533AFDcc 0%, #533AFD40 50%, transparent 75%)",
           filter: "blur(32px)",
         }}
       />
-      <div className="relative rounded-[4px] overflow-hidden transition-all duration-200 group-hover:-translate-y-1">
+      <div
+        className="relative rounded-[4px] overflow-hidden transition-all duration-200 group-hover:-translate-y-1"
+      >
         <div
           className="relative aspect-square flex items-center justify-center p-5 transition-colors duration-300"
           style={{ backgroundColor: bgColor }}
@@ -161,7 +139,7 @@ export function PatternCard({
                     e.stopPropagation();
                     router.push(`/?search=${encodeURIComponent(tag.name)}`);
                   }}
-                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[2px] hover:bg-[#4E11E2] transition-colors cursor-pointer"
+                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[2px] hover:bg-accent-light transition-colors cursor-pointer"
                 >
                   {tag.name}
                 </span>

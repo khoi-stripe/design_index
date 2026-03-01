@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { v4 as uuid } from "uuid";
-import sharp from "sharp";
+import { processAndStoreImage } from "@/lib/image";
 
-const THUMB_SIZE = 800;
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
-  const file = formData.get("file") as File | null;
+  const file = formData.get("file");
 
-  if (!file) {
+  if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  const bytes = await file.arrayBuffer();
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json({ error: "File too large (max 20MB)" }, { status: 400 });
+  }
+
+  if (file.type && !ALLOWED_TYPES.includes(file.type)) {
+    return NextResponse.json({ error: "Invalid file type. Allowed: PNG, JPEG, WebP, GIF" }, { status: 400 });
+  }
+
+  let bytes: ArrayBuffer;
+  try {
+    bytes = await file.arrayBuffer();
+  } catch {
+    return NextResponse.json({ error: "Failed to read file" }, { status: 400 });
+  }
   const buffer = Buffer.from(bytes);
 
   const id = uuid();
@@ -22,31 +34,16 @@ export async function POST(request: NextRequest) {
   const filename = `${id}.${ext}`;
   const thumbFilename = `${id}-thumb.${ext}`;
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDir, { recursive: true });
+  try {
+    const { dominantColor } = await processAndStoreImage(buffer, filename, thumbFilename);
 
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  const thumbBuffer = await sharp(buffer)
-    .resize({
-      width: THUMB_SIZE,
-      height: THUMB_SIZE,
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .png({ quality: 85 })
-    .toBuffer();
-
-  await writeFile(path.join(uploadDir, thumbFilename), thumbBuffer);
-
-  const { dominant } = await sharp(thumbBuffer).stats();
-  const r = dominant.r, g = dominant.g, b = dominant.b;
-  const dominantColor = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-
-  return NextResponse.json({
-    url: `/uploads/${filename}`,
-    thumbnailUrl: `/uploads/${thumbFilename}`,
-    dominantColor,
-    filename,
-  });
+    return NextResponse.json({
+      url: `/uploads/${filename}`,
+      thumbnailUrl: `/uploads/${thumbFilename}`,
+      dominantColor,
+      filename,
+    });
+  } catch {
+    return NextResponse.json({ error: "Failed to process image" }, { status: 422 });
+  }
 }

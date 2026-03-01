@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { ensureTags } from "@/lib/tags";
 
 const FIGMA_SCREENSHOT_URL = "/api/figma/screenshot";
 
@@ -8,7 +9,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const { figmaUrl, label, description, tags } = body;
 
   let screenshotUrl = body.screenshotUrl || "";
@@ -45,20 +51,7 @@ export async function POST(
   });
   const versionNumber = (maxVersion._max.versionNumber || 0) + 1;
 
-  const tagConnects: { tagId: string }[] = [];
-  if (tags?.length) {
-    for (const tagSlug of tags as string[]) {
-      const tag = await prisma.tag.upsert({
-        where: { slug: tagSlug },
-        update: {},
-        create: {
-          name: tagSlug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-          slug: tagSlug,
-        },
-      });
-      tagConnects.push({ tagId: tag.id });
-    }
-  }
+  const tagConnects = tags?.length ? await ensureTags(tags as string[]) : [];
 
   const version = await prisma.patternVersion.create({
     data: {

@@ -25,6 +25,29 @@ body {
 }
 
 
+.flow-header {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #1e1e2e;
+}
+
+.flow-header .back-button {
+  padding: 4px;
+  justify-self: start;
+}
+
+.flow-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #667691;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .empty-state {
   flex: 1;
   display: flex;
@@ -39,7 +62,7 @@ body {
 .empty-title {
   font-weight: 600;
   font-size: 14px;
-  color: #c8d1dc;
+  color: #D4DEE9;
   margin-top: 8px;
 }
 
@@ -74,7 +97,7 @@ body {
 .file-key-prompt-title {
   font-weight: 600;
   font-size: 14px;
-  color: #c8d1dc;
+  color: #D4DEE9;
 }
 
 .file-key-prompt-desc {
@@ -147,7 +170,7 @@ body {
 .selection-name {
   font-weight: 500;
   font-size: 13px;
-  color: #c8d1dc;
+  color: #D4DEE9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -187,16 +210,9 @@ body {
 }
 
 .tag-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 9px;
-  background: #533AFD;
-  color: white;
   font-size: 10px;
   font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .input {
@@ -206,7 +222,7 @@ body {
   border: 1px solid #1e1e2e;
   border-radius: 4px;
   outline: none;
-  color: #c8d1dc;
+  color: #D4DEE9;
   background: #131318;
   transition: border-color 0.15s;
   font-family: inherit;
@@ -363,7 +379,7 @@ body {
 
 .category-option:hover {
   border-color: #533AFD;
-  background: #0e0e13;
+  background: #1A2C44;
 }
 
 .category-option.active {
@@ -375,7 +391,7 @@ body {
 .category-label {
   font-size: 12px;
   font-weight: 600;
-  color: #c8d1dc;
+  color: #D4DEE9;
 }
 
 .category-desc {
@@ -451,7 +467,7 @@ body {
 
 .mode-option:hover {
   border-color: #533AFD;
-  background: #0e0e13;
+  background: #1A2C44;
 }
 
 .mode-icon {
@@ -469,7 +485,7 @@ body {
 .mode-label {
   font-size: 13px;
   font-weight: 600;
-  color: #c8d1dc;
+  color: #D4DEE9;
 }
 
 .mode-desc {
@@ -495,7 +511,7 @@ body {
 }
 
 .back-button:hover {
-  color: #c8d1dc;
+  color: #D4DEE9;
 }
 
 /* Search results */
@@ -529,7 +545,7 @@ body {
 }
 
 .search-result-item:hover {
-  background: #07070a;
+  background: #1A2C44;
 }
 
 .search-result-thumb {
@@ -557,7 +573,7 @@ body {
 .search-result-title {
   font-size: 12px;
   font-weight: 500;
-  color: #c8d1dc;
+  color: #D4DEE9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

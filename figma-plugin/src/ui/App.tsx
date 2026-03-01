@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Tagger } from "./components/Tagger";
 import { Updater } from "./components/Updater";
 import { ModeChooser } from "./components/ModeChooser";
+import type { UserData } from "./shared/types";
 import "./styles.css";
 
 export type SelectionNode = {
@@ -13,11 +14,6 @@ export type SelectionNode = {
   pageName: string;
   existingTags: string[];
   existingMeta: { title: string; description: string } | null;
-};
-
-type UserData = {
-  name: string;
-  photoUrl: string;
 };
 
 function extractFileKey(url: string): string | null {
@@ -86,11 +82,8 @@ export default function App() {
     <div className="app">
       {!hasSelection ? (
         <div className="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#667691" strokeWidth="1.5">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
+          <svg width="48" height="48" viewBox="0 0 128 128" fill="white">
+            <path fillRule="evenodd" clipRule="evenodd" d="M36 96L92 82.56V32L36 45.72V96Z" />
           </svg>
           <p className="empty-title">Select frames</p>
           <p className="empty-desc">
@@ -130,20 +123,36 @@ export default function App() {
           onAdd={() => setMode("add")}
           onUpdate={() => setMode("update")}
         />
-      ) : mode === "add" ? (
-        <Tagger
-          selections={selections}
-          fileKey={fileKey}
-          user={user}
-          onBack={() => setMode("choose")}
-        />
       ) : (
-        <Updater
-          selections={selections}
-          fileKey={fileKey}
-          user={user}
-          onBack={() => setMode("choose")}
-        />
+        <>
+          <div className="flow-header">
+            <button className="back-button" onClick={() => setMode("choose")}>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M11.6187 0.381282C11.9604 0.72299 11.9604 1.27701 11.6187 1.61872L5.23744 8L11.6187 14.3813C11.9604 14.723 11.9604 15.277 11.6187 15.6187C11.277 15.9604 10.723 15.9604 10.3813 15.6187L3.38128 8.61872C3.03957 8.27701 3.03957 7.72299 3.38128 7.38128L10.3813 0.381282C10.723 0.0395728 11.277 0.0395728 11.6187 0.381282Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+            <span className="flow-title">
+              {mode === "add" ? "Add new" : "Update existing"}
+            </span>
+          </div>
+          {mode === "add" ? (
+            <Tagger
+              selections={selections}
+              fileKey={fileKey}
+              user={user}
+            />
+          ) : (
+            <Updater
+              selections={selections}
+              user={user}
+            />
+          )}
+        </>
       )}
     </div>
   );

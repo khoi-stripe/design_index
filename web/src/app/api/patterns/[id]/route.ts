@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { ensureTags } from "@/lib/tags";
 
 export async function GET(
   _request: NextRequest,
@@ -47,7 +48,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const { title, description, category, status, featured, tags } = body;
 
   const updateData: Record<string, unknown> = {};
@@ -59,19 +65,9 @@ export async function PUT(
 
   if (tags) {
     await prisma.patternTag.deleteMany({ where: { patternId: id } });
-
-    for (const tagSlug of tags) {
-      const tag = await prisma.tag.upsert({
-        where: { slug: tagSlug },
-        update: {},
-        create: {
-          name: tagSlug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-          slug: tagSlug,
-        },
-      });
-      await prisma.patternTag.create({
-        data: { patternId: id, tagId: tag.id },
-      });
+    const resolved = await ensureTags(tags as string[]);
+    for (const { tagId } of resolved) {
+      await prisma.patternTag.create({ data: { patternId: id, tagId } });
     }
   }
 

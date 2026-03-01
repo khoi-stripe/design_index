@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { v4 as uuid } from "uuid";
-import sharp from "sharp";
-
-const THUMB_SIZE = 800;
+import { processAndStoreImage } from "@/lib/image";
 
 function parseFigmaUrl(url: string): { fileKey: string; nodeId: string } | null {
   const fileMatch = url.match(
@@ -22,7 +18,13 @@ function parseFigmaUrl(url: string): { fileKey: string; nodeId: string } | null 
 }
 
 export async function POST(request: NextRequest) {
-  const { figmaUrl } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  const { figmaUrl } = body;
 
   if (!figmaUrl) {
     return NextResponse.json({ error: "figmaUrl is required" }, { status: 400 });
@@ -84,26 +86,7 @@ export async function POST(request: NextRequest) {
   const filename = `${id}.png`;
   const thumbFilename = `${id}-thumb.png`;
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDir, { recursive: true });
-
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  const thumbBuffer = await sharp(buffer)
-    .resize({
-      width: THUMB_SIZE,
-      height: THUMB_SIZE,
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .png({ quality: 85 })
-    .toBuffer();
-
-  await writeFile(path.join(uploadDir, thumbFilename), thumbBuffer);
-
-  const { dominant } = await sharp(thumbBuffer).stats();
-  const r = dominant.r, g = dominant.g, b = dominant.b;
-  const dominantColor = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+  const { dominantColor } = await processAndStoreImage(buffer, filename, thumbFilename);
 
   return NextResponse.json({
     screenshotUrl: `/uploads/${filename}`,

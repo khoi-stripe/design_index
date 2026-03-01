@@ -51,9 +51,14 @@ export default function HomePage() {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [filterSticky, setFilterSticky] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
 
   const openMenu = () => {
+    setShowDatePicker(false);
     setMenuVisible(true);
     setMenuClosing(false);
     setShowFilterMenu(true);
@@ -74,6 +79,11 @@ export default function HomePage() {
     } else if (!showFilterMenu) {
       openMenu();
     }
+  };
+
+  const handleDatePickerOpenChange = (open: boolean) => {
+    if (open && showFilterMenu) closeMenu();
+    setShowDatePicker(open);
   };
 
   useEffect(() => {
@@ -102,6 +112,35 @@ export default function HomePage() {
     const timeout = setTimeout(fetchPatterns, search ? 300 : 0);
     return () => clearTimeout(timeout);
   }, [fetchPatterns, search]);
+
+  useEffect(() => {
+    let filterNaturalTop = 0;
+    const measure = () => {
+      if (filterRef.current) {
+        filterNaturalTop = filterRef.current.offsetTop;
+      }
+    };
+    measure();
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      const isStuck = y + 60 > filterNaturalTop;
+      const scrollingUp = y < lastScrollY.current;
+
+      if (!isStuck) {
+        setFilterSticky(true);
+      } else {
+        setFilterSticky(scrollingUp);
+      }
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
 
   const activeCategoryLabel =
     CATEGORIES.find((c) => c.value === activeCategory)?.label || "All";
@@ -138,70 +177,71 @@ export default function HomePage() {
       </header>
 
       <main className="bg-content-bg min-h-[calc(100vh-60px)]">
-        {/* Inline Filter Bar */}
-        <div className="border-b border-border bg-background">
-          <div className="max-w-[1400px] mx-auto px-8 py-4">
-            <div className="flex items-center justify-between gap-4">
-              {/* Left: Category filter + count */}
-              <div className="flex items-center gap-1.5 flex-1">
-                <div className="relative inline-block">
-                  <button
-                    onClick={toggleMenu}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground transition-colors"
+        <div className="max-w-[1400px] mx-auto p-8">
+          {/* Filter Bar */}
+          <div
+            ref={filterRef}
+            className={`flex items-center justify-between gap-4 sticky top-[60px] z-40 bg-content-bg -mx-8 px-8 py-2 transition-transform duration-200 ease-out ${
+              filterSticky ? "translate-y-0" : "-translate-y-full"
+            }`}
+          >
+            {/* Left: Category filter + count */}
+            <div className="flex items-center gap-1.5 flex-1">
+              <div className="relative inline-block">
+                <button
+                  onClick={toggleMenu}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M2 4h12M4 8h8M6 12h4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="font-medium tracking-tight">
+                    Showing: {activeCategoryLabel}
+                  </span>
+                </button>
+
+                {showFilterMenu && (
+                  <div
+                    ref={menuRef}
+                    className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
+                      menuClosing ? "menu-spring-exit" : "menu-spring-enter"
+                    }`}
                   >
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M2 4h12M4 8h8M6 12h4"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <span className="font-semibold tracking-tight">
-                      Showing: {activeCategoryLabel}
-                    </span>
-                  </button>
-
-                  {showFilterMenu && (
-                    <div
-                      ref={menuRef}
-                      className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
-                        menuClosing ? "menu-spring-exit" : "menu-spring-enter"
-                      }`}
-                    >
-                      {CATEGORIES.map((cat) => (
-                        <button
-                          key={cat.label}
-                          onClick={() => {
-                            setActiveCategory(cat.value);
-                            closeMenu();
-                          }}
-                          className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                            activeCategory === cat.value
-                              ? "bg-accent text-white font-medium"
-                              : "text-foreground hover:bg-surface-hover"
-                          }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs text-muted">
-                  {loading ? "..." : patterns.length}
-                </span>
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.label}
+                        onClick={() => {
+                          setActiveCategory(cat.value);
+                          closeMenu();
+                        }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
+                          activeCategory === cat.value
+                            ? "bg-accent text-white font-medium"
+                            : "text-foreground hover:bg-surface-hover"
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+              <span className="text-xs text-muted">
+                {loading ? "..." : patterns.length}
+              </span>
+            </div>
 
-              {/* Right: Date range picker */}
-              <div className="flex items-center gap-1.5">
-                <DateRangePicker value={dateRange} onChange={setDateRange} />
-              </div>
+            {/* Right: Date range picker */}
+            <div className="flex items-center gap-1.5">
+              <DateRangePicker value={dateRange} onChange={setDateRange} open={showDatePicker} onOpenChange={handleDatePickerOpenChange} />
             </div>
           </div>
-        </div>
 
-        <div className="max-w-[1400px] mx-auto p-8">
           <PatternGrid patterns={patterns} loading={loading} />
         </div>
       </main>

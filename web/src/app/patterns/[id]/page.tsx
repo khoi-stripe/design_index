@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { slugify } from "@/lib/utils";
 
 type Tag = { id: string; name: string; slug: string };
 type PatternVersion = {
@@ -37,6 +38,7 @@ type PatternDetail = {
   description: string;
   category: string;
   screenshotUrl: string;
+  dominantColor: string;
   figmaDeepLink: string;
   figmaPageName: string;
   figmaFileKey: string;
@@ -107,6 +109,7 @@ export default function PatternDetailPage() {
   const [newVersionTag, setNewVersionTag] = useState("");
   const [addingVersion, setAddingVersion] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const fetchPattern = useCallback(() => {
     fetch(`/api/patterns/${id}`)
@@ -136,17 +139,40 @@ export default function PatternDetailPage() {
   const displayTags = activeVersion?.tags?.length ? activeVersion.tags : pattern?.tags || [];
 
   const allImages = useMemo(() => {
-    const imgs: { url: string; label: string }[] = [];
+    const imgs: { url: string; label: string; dominantColor: string }[] = [];
     if (displayScreenshot) {
-      imgs.push({ url: displayScreenshot, label: "Primary" });
+      imgs.push({
+        url: displayScreenshot,
+        label: "Primary",
+        dominantColor: activeVersion?.dominantColor || pattern?.dominantColor || "",
+      });
     }
     if (pattern?.images?.length) {
       for (const img of pattern.images) {
-        imgs.push({ url: img.screenshotUrl, label: img.label || img.nodeName || `Image ${img.sortOrder + 1}` });
+        imgs.push({
+          url: img.screenshotUrl,
+          label: img.label || img.nodeName || `Image ${img.sortOrder + 1}`,
+          dominantColor: img.dominantColor || "",
+        });
       }
     }
     return imgs;
-  }, [displayScreenshot, pattern]);
+  }, [displayScreenshot, pattern, activeVersion]);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+      if (e.key === "ArrowRight") setActiveImageIndex((i) => (i + 1) % allImages.length);
+      if (e.key === "ArrowLeft") setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
+    };
+    document.addEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [lightboxOpen, allImages.length]);
 
   const startEditing = () => {
     if (!pattern) return;
@@ -226,13 +252,13 @@ export default function PatternDetailPage() {
   const removeTag = (slug: string) => setEditTags((prev) => prev.filter((t) => t !== slug));
 
   const addTag = () => {
-    const slug = newTag.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const slug = slugify(newTag);
     if (slug && !editTags.includes(slug)) setEditTags((prev) => [...prev, slug]);
     setNewTag("");
   };
 
   const addVersionTag = () => {
-    const slug = newVersionTag.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const slug = slugify(newVersionTag);
     if (slug && !versionTags.includes(slug)) setVersionTags((prev) => [...prev, slug]);
     setNewVersionTag("");
   };
@@ -320,13 +346,17 @@ export default function PatternDetailPage() {
       <div className="max-w-[1400px] mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
           <div className="space-y-3 min-w-0">
-            <div className="relative rounded-xl border border-border overflow-hidden bg-surface group w-full h-[70vh] max-h-[800px]">
+            <div
+              className="relative rounded-xl border border-border overflow-hidden group w-full h-[70vh] max-h-[800px] transition-colors duration-300"
+              style={{ backgroundColor: allImages[activeImageIndex]?.dominantColor || "#131318" }}
+            >
               {allImages.length > 0 ? (
                 <Image
                   src={allImages[activeImageIndex]?.url || displayScreenshot}
                   alt={allImages[activeImageIndex]?.label || pattern.title}
                   fill
-                  className="object-contain"
+                  className="object-contain cursor-zoom-in p-6"
+                  onClick={() => setLightboxOpen(true)}
                 />
               ) : (
                 <div className="aspect-[16/10] flex items-center justify-center text-muted/30">
@@ -719,7 +749,7 @@ export default function PatternDetailPage() {
                           <Link
                             key={tag.id}
                             href={`/?search=${encodeURIComponent(tag.name)}`}
-                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-[2px] hover:bg-[#4E11E2] transition-colors"
+                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-[2px] hover:bg-accent-light transition-colors"
                           >
                             {tag.name}
                           </Link>
@@ -774,6 +804,101 @@ export default function PatternDetailPage() {
           </div>
         )}
       </div>
+
+      {lightboxOpen && allImages.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          {/* Image counter */}
+          {allImages.length > 1 && (
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 text-xs text-white/60 font-medium">
+              {activeImageIndex + 1} / {allImages.length}
+            </div>
+          )}
+
+          {/* Image */}
+          <div
+            className="relative w-[90vw] h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={allImages[activeImageIndex]?.url || displayScreenshot}
+              alt={allImages[activeImageIndex]?.label || pattern.title}
+              fill
+              className="object-contain"
+              sizes="90vw"
+              priority
+            />
+          </div>
+
+          {/* Prev / Next */}
+          {allImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImageIndex((i) => (i + 1) % allImages.length);
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Thumbnail strip */}
+          {allImages.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-2 bg-black/60 rounded-xl backdrop-blur-sm">
+              {allImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex(i);
+                  }}
+                  className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                    i === activeImageIndex
+                      ? "border-white opacity-100"
+                      : "border-transparent opacity-50 hover:opacity-80"
+                  }`}
+                >
+                  <Image
+                    src={img.url}
+                    alt={img.label}
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

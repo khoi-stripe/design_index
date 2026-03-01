@@ -20,13 +20,29 @@ const PRESET_OPTIONS: PresetOption[] = [
 export function DateRangePicker({
   value,
   onChange,
+  open,
+  onOpenChange,
 }: {
   value?: DateRange;
   onChange: (range: DateRange | undefined) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open ?? internalOpen;
+  const setIsOpen = onOpenChange ?? setInternalOpen;
   const [selectedPreset, setSelectedPreset] = useState<string>("all-time");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!value?.from) {
+      setSelectedPreset("all-time");
+      return;
+    }
+    const diffDays = Math.round((Date.now() - value.from.getTime()) / (1000 * 60 * 60 * 24));
+    const match = PRESET_OPTIONS.find((p) => p.days && Math.abs(p.days - diffDays) <= 1);
+    setSelectedPreset(match?.value || "custom");
+  }, [value]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -69,14 +85,14 @@ export function DateRangePicker({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 z-50 bg-background border border-border rounded-lg shadow-lg py-2 min-w-[160px] menu-spring-enter-right">
+        <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 min-w-[160px] menu-spring-enter-right">
           {PRESET_OPTIONS.map((preset) => (
             <button
               key={preset.value}
               onClick={() => handlePresetSelect(preset)}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+              className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
                 selectedPreset === preset.value
-                  ? "bg-accent/10 text-accent font-medium"
+                  ? "bg-accent text-white font-medium"
                   : "text-foreground hover:bg-surface-hover"
               }`}
             >

@@ -1,32 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   searchPatterns,
   uploadScreenshot,
   addVersion,
   updatePatternMeta,
-  fetchTags,
 } from "../api";
+import { CATEGORIES, IMG_BASE } from "../shared/constants";
+import { useTags } from "../hooks/useTags";
 import type { SelectionNode } from "../App";
-
-type UserData = {
-  name: string;
-  photoUrl: string;
-};
-
-const CATEGORIES = [
-  { value: "flow", label: "Flow", desc: "Multi-step sequence or journey" },
-  { value: "screen", label: "Screen", desc: "Whole page or surface" },
-  { value: "component", label: "Component", desc: "Individual UI piece" },
-  { value: "asset", label: "Asset", desc: "Icons, illustrations, graphics" },
-] as const;
-
-const IMG_BASE = "http://localhost:3000";
-
-const SUGGESTED_TAGS = [
-  "onboarding", "modal", "dashboard", "form", "checkout",
-  "pricing", "settings", "navigation", "empty-state",
-  "activity-feed", "card", "table", "multi-step",
-];
+import type { UserData, CapturedImage } from "../shared/types";
 
 type SearchResult = {
   id: string;
@@ -40,14 +22,6 @@ type SearchResult = {
   category: string;
   createdAt: string;
   tags: { tag: { id: string; name: string; slug: string } }[];
-};
-
-type CapturedImage = {
-  nodeId: string;
-  nodeName: string;
-  screenshotUrl: string;
-  thumbnailUrl: string;
-  dominantColor: string;
 };
 
 function timeAgo(dateStr: string): string {
@@ -67,18 +41,13 @@ function timeAgo(dateStr: string): string {
 
 export function Updater({
   selections,
-  fileKey,
   user,
-  onBack,
 }: {
   selections: SelectionNode[];
-  fileKey: string;
   user: UserData | null;
-  onBack: () => void;
 }) {
   const primary = selections[0];
 
-  // Phase: "search" or "edit"
   const [phase, setPhase] = useState<"search" | "edit">("search");
 
   // Search state
@@ -94,12 +63,9 @@ export function Updater({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string | null>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [customTag, setCustomTag] = useState("");
-  const [allTags, setAllTags] = useState<{ slug: string; name: string }[]>([]);
-  const [typeaheadIndex, setTypeaheadIndex] = useState(-1);
-  const [showTypeahead, setShowTypeahead] = useState(false);
-  const tagInputRef = useRef<HTMLInputElement>(null);
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const tags = useTags(user?.name);
 
   // Submit state
   const [status, setStatus] = useState<
@@ -109,11 +75,7 @@ export function Updater({
   const [captureProgress, setCaptureProgress] = useState("");
 
   useEffect(() => {
-    fetchTags()
-      .then((tags) =>
-        setAllTags(tags.map((t) => ({ slug: t.slug, name: t.name })))
-      )
-      .catch(() => {});
+    return () => clearTimeout(statusTimeoutRef.current);
   }, []);
 
   // Debounced search
@@ -143,79 +105,8 @@ export function Updater({
     setTitle(pattern.title);
     setDescription(pattern.description);
     setCategory(pattern.category);
-    setSelectedTags(pattern.tags.map((t) => t.tag.slug));
+    tags.setSelectedTags(pattern.tags.map((t) => t.tag.slug));
     setPhase("edit");
-  };
-
-  const toggleTag = (slug: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(slug) ? prev.filter((t) => t !== slug) : [...prev, slug]
-    );
-  };
-
-  const addCustomTag = () => {
-    const slug = customTag
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-    if (slug && !selectedTags.includes(slug)) {
-      setSelectedTags((prev) => [...prev, slug]);
-    }
-    setCustomTag("");
-    setShowTypeahead(false);
-    setTypeaheadIndex(-1);
-  };
-
-  const typeaheadMatches =
-    customTag.trim().length > 0
-      ? [
-          ...allTags.filter(
-            (t) =>
-              !selectedTags.includes(t.slug) &&
-              (t.name.toLowerCase().includes(customTag.toLowerCase()) ||
-                t.slug.includes(
-                  customTag.toLowerCase().replace(/\s+/g, "-")
-                ))
-          ),
-          ...SUGGESTED_TAGS.filter(
-            (s) =>
-              !selectedTags.includes(s) &&
-              !allTags.some((t) => t.slug === s) &&
-              s.includes(customTag.toLowerCase().replace(/\s+/g, "-"))
-          ).map((s) => ({ slug: s, name: s.replace(/-/g, " ") })),
-        ].slice(0, 6)
-      : [];
-
-  const selectTypeaheadItem = (slug: string) => {
-    if (!selectedTags.includes(slug)) {
-      setSelectedTags((prev) => [...prev, slug]);
-    }
-    setCustomTag("");
-    setShowTypeahead(false);
-    setTypeaheadIndex(-1);
-    tagInputRef.current?.focus();
-  };
-
-  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setTypeaheadIndex((i) =>
-        Math.min(i + 1, typeaheadMatches.length - 1)
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setTypeaheadIndex((i) => Math.max(i - 1, -1));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (typeaheadIndex >= 0 && typeaheadMatches[typeaheadIndex]) {
-        selectTypeaheadItem(typeaheadMatches[typeaheadIndex].slug);
-      } else {
-        addCustomTag();
-      }
-    } else if (e.key === "Escape") {
-      setShowTypeahead(false);
-      setTypeaheadIndex(-1);
-    }
   };
 
   const handleSubmit = useCallback(async () => {
@@ -224,7 +115,7 @@ export function Updater({
       setErrorMsg("Choose a category");
       return;
     }
-    if (selectedTags.length === 0) {
+    if (tags.selectedTags.length === 0) {
       setErrorMsg("Add at least one tag");
       return;
     }
@@ -308,7 +199,7 @@ export function Updater({
         thumbnailUrl: primaryImage.thumbnailUrl,
         dominantColor: primaryImage.dominantColor,
         description: description.trim(),
-        tags: selectedTags,
+        tags: tags.selectedTags,
         additionalImages,
       });
 
@@ -316,7 +207,7 @@ export function Updater({
         title.trim() !== selected.title ||
         description.trim() !== selected.description ||
         category !== selected.category ||
-        JSON.stringify(selectedTags.sort()) !==
+        JSON.stringify([...tags.selectedTags].sort()) !==
           JSON.stringify(
             selected.tags.map((t) => t.tag.slug).sort()
           );
@@ -326,7 +217,7 @@ export function Updater({
           title: title.trim(),
           description: description.trim(),
           category,
-          tags: selectedTags,
+          tags: tags.selectedTags,
         });
       }
 
@@ -334,7 +225,7 @@ export function Updater({
         {
           pluginMessage: {
             type: "save-tags",
-            tags: selectedTags,
+            tags: tags.selectedTags,
             metadata: {
               title: title.trim(),
               description: description.trim(),
@@ -345,36 +236,19 @@ export function Updater({
       );
 
       setStatus("done");
-      setTimeout(() => setStatus("idle"), 2000);
+      statusTimeoutRef.current = setTimeout(() => setStatus("idle"), 2000);
     } catch (e) {
       setStatus("error");
       setErrorMsg(e instanceof Error ? e.message : "Something went wrong");
     }
-  }, [
-    selected,
-    title,
-    description,
-    category,
-    selectedTags,
-    selections,
-    fileKey,
-    user,
-  ]);
-
-  const suggestedToShow = SUGGESTED_TAGS.filter(
-    (t) => !selectedTags.includes(t)
-  );
-  const existingToShow = allTags.filter(
-    (t) =>
-      !selectedTags.includes(t.slug) && !SUGGESTED_TAGS.includes(t.slug)
-  );
+  }, [selected, title, description, category, tags.selectedTags, selections]);
 
   // --- SEARCH PHASE ---
   if (phase === "search") {
     return (
       <div className="tagger">
         <div className="tagger-scroll">
-          <button className="back-button" onClick={onBack}>
+          <button className="back-button" onClick={() => setPhase("search")}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
               <path
                 fillRule="evenodd"
@@ -533,16 +407,16 @@ export function Updater({
         <div className="field">
           <label className="label">
             Tags
-            {selectedTags.length > 0 && (
-              <span className="tag-count">{selectedTags.length}</span>
+            {tags.selectedTags.length > 0 && (
+              <span className="tag-count">{tags.selectedTags.length}</span>
             )}
           </label>
           <div className="tags-selected">
-            {selectedTags.map((slug) => (
+            {tags.selectedTags.map((slug) => (
               <button
                 key={slug}
                 className="tag active"
-                onClick={() => toggleTag(slug)}
+                onClick={() => tags.toggleTag(slug)}
               >
                 {slug.replace(/-/g, " ")}
                 <svg
@@ -565,44 +439,33 @@ export function Updater({
           <div className="tag-input-wrapper">
             <div className="tag-input-row">
               <input
-                ref={tagInputRef}
+                ref={tags.tagInputRef}
                 type="text"
-                value={customTag}
-                onChange={(e) => {
-                  setCustomTag(e.target.value);
-                  setShowTypeahead(
-                    e.target.value.trim().length > 0
-                  );
-                  setTypeaheadIndex(-1);
-                }}
-                onFocus={() =>
-                  customTag.trim().length > 0 &&
-                  setShowTypeahead(true)
-                }
-                onBlur={() =>
-                  setTimeout(() => setShowTypeahead(false), 150)
-                }
-                onKeyDown={handleTagInputKeyDown}
+                value={tags.customTag}
+                onChange={(e) => tags.handleInputChange(e.target.value)}
+                onFocus={tags.handleInputFocus}
+                onBlur={tags.handleInputBlur}
+                onKeyDown={tags.handleTagInputKeyDown}
                 className="input small"
                 placeholder="Search or add tag..."
               />
-              {customTag && (
-                <button onClick={addCustomTag} className="btn-small">
+              {tags.customTag && (
+                <button onClick={tags.addCustomTag} className="btn-small">
                   Add
                 </button>
               )}
             </div>
-            {showTypeahead && typeaheadMatches.length > 0 && (
+            {tags.showTypeahead && tags.typeaheadMatches.length > 0 && (
               <div className="typeahead-dropdown">
-                {typeaheadMatches.map((t, i) => (
+                {tags.typeaheadMatches.map((t, i) => (
                   <button
                     key={t.slug}
                     className={`typeahead-item ${
-                      i === typeaheadIndex ? "active" : ""
+                      i === tags.typeaheadIndex ? "active" : ""
                     }`}
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      selectTypeaheadItem(t.slug);
+                      tags.selectTypeaheadItem(t.slug);
                     }}
                   >
                     {t.name}
@@ -612,27 +475,13 @@ export function Updater({
             )}
           </div>
 
-          {suggestedToShow.length > 0 && (
+          {tags.recentToShow.length > 0 && (
             <div className="tags-suggestions">
-              {suggestedToShow.map((slug) => (
-                <button
-                  key={slug}
-                  className="tag"
-                  onClick={() => toggleTag(slug)}
-                >
-                  {slug.replace(/-/g, " ")}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {existingToShow.length > 0 && (
-            <div className="tags-suggestions">
-              {existingToShow.slice(0, 8).map((t) => (
+              {tags.recentToShow.map((t) => (
                 <button
                   key={t.slug}
                   className="tag"
-                  onClick={() => toggleTag(t.slug)}
+                  onClick={() => tags.toggleTag(t.slug)}
                 >
                   {t.name}
                 </button>
@@ -642,7 +491,6 @@ export function Updater({
         </div>
       </div>
 
-      {/* Pinned bottom bar */}
       <div className="tagger-bottom">
         <div className="selection-info">
           <div className="selection-icon">

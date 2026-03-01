@@ -1,24 +1,54 @@
 @import "tailwindcss";
 
 :root {
+  /* Sail neutral scale */
+  --neutral-0: #FFFFFF;
+  --neutral-25: #F4F7FA;
+  --neutral-50: #ECF1F6;
+  --neutral-100: #D4DEE9;
+  --neutral-200: #BAC8DA;
+  --neutral-300: #95A4BA;
+  --neutral-400: #7D8BA4;
+  --neutral-500: #667691;
+  --neutral-600: #50617A;
+  --neutral-700: #3C4F69;
+  --neutral-800: #273951;
+  --neutral-900: #1A2C44;
+
+  /* Semantic tokens */
   --background: #0b0b0f;
   --content-bg: #0f0f14;
-  --foreground: #95a4ba;
-  --foreground-bright: #c8d1dc;
+  --foreground: var(--neutral-300);
+  --foreground-bright: var(--neutral-100);
   --accent: #533AFD;
   --accent-light: #4E11E2;
   --accent-bg: #1a1830;
   --border: #1e1e2e;
-  --muted: #667691;
+  --muted: var(--neutral-500);
   --card-bg: #000000;
   --card-hover: #0a0a0f;
   --tag-bg: #533AFD;
-  --tag-text: #ffffff;
+  --tag-text: var(--neutral-0);
   --surface: #131318;
-  --surface-hover: #0e0e13;
+  --surface-hover: var(--neutral-900);
 }
 
 @theme inline {
+  /* Sail neutral scale */
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-25: var(--neutral-25);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+
+  /* Semantic tokens */
   --color-background: var(--background);
   --color-content-bg: var(--content-bg);
   --color-foreground: var(--foreground);
@@ -83,11 +113,6 @@ body {
 .menu-spring-exit {
   animation: menu-spring-out 0.12s ease-in forwards;
   transform-origin: top left;
-}
-
-.menu-spring-exit-right {
-  animation: menu-spring-out 0.12s ease-in forwards;
-  transform-origin: top right;
 }
 
 .rdp-dark {

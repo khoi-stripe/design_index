@@ -1,5 +1,3 @@
-import React from "react";
-
 export function ModeChooser({
   onAdd,
   onUpdate,

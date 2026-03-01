@@ -50,10 +50,12 @@ export async function createPattern(data: {
   return res.json();
 }
 
-export async function fetchTags(): Promise<
+export async function fetchTags(authorName?: string): Promise<
   { id: string; name: string; slug: string; category: string }[]
 > {
-  const res = await fetch(`${API_BASE}/tags`);
+  const params = new URLSearchParams();
+  if (authorName) params.set("authorName", authorName);
+  const res = await fetch(`${API_BASE}/tags?${params}`);
   if (!res.ok) throw new Error("Failed to fetch tags");
   return res.json();
 }

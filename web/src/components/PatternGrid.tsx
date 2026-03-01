@@ -1,21 +1,7 @@
 "use client";
 
 import { PatternCard } from "./PatternCard";
-
-type Pattern = {
-  id: string;
-  title: string;
-  description: string;
-  screenshotUrl: string;
-  thumbnailUrl: string;
-  dominantColor: string;
-  authorName: string;
-  authorAvatar: string;
-  figmaDeepLink: string;
-  featured: boolean;
-  createdAt: string;
-  tags: { tag: { id: string; name: string; slug: string } }[];
-};
+import type { Pattern } from "@/lib/types";
 
 export function PatternGrid({
   patterns,
@@ -60,9 +46,9 @@ export function PatternGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 isolate">
       {patterns.map((pattern, i) => (
-        <PatternCard key={pattern.id} pattern={pattern} index={i} priority={i < 3} />
+        <PatternCard key={pattern.id} pattern={pattern} priority={i < 3} />
       ))}
     </div>
   );
