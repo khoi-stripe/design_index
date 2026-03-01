@@ -43,6 +43,7 @@ const CATEGORIES = [
   { value: "screen", label: "Screen" },
   { value: "pattern", label: "Pattern" },
   { value: "component", label: "Component" },
+  { value: "asset", label: "Asset" },
 ];
 
 export default function PatternDetailPage() {
@@ -170,8 +171,8 @@ export default function PatternDetailPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="max-w-[1100px] mx-auto px-6 h-14 flex items-center justify-between">
-          <Link
-            href="/"
+          <button
+            onClick={() => router.back()}
             className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
           >
             <svg
@@ -188,8 +189,8 @@ export default function PatternDetailPage() {
                 strokeLinejoin="round"
               />
             </svg>
-            Home
-          </Link>
+            Back
+          </button>
           <div className="flex items-center gap-2">
             {!editing && (
               <>
@@ -446,7 +447,7 @@ export default function PatternDetailPage() {
                           <Link
                             key={tag.id}
                             href={`/?search=${encodeURIComponent(tag.name)}`}
-                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-md hover:bg-accent-light transition-colors"
+                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-md hover:bg-[#5248d9] transition-colors"
                           >
                             {tag.name}
                           </Link>

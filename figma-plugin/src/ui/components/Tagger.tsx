@@ -21,6 +21,7 @@ const CATEGORIES = [
   { value: "screen", label: "Screen", desc: "Whole page or surface" },
   { value: "pattern", label: "Pattern", desc: "Assemblage of components" },
   { value: "component", label: "Component", desc: "Individual UI piece" },
+  { value: "asset", label: "Asset", desc: "Icons, illustrations, graphics" },
 ] as const;
 
 const SUGGESTED_TAGS = [

@@ -10,6 +10,7 @@ const CATEGORIES = [
   { value: "screen", label: "Screens" },
   { value: "pattern", label: "Patterns" },
   { value: "component", label: "Components" },
+  { value: "asset", label: "Assets" },
 ] as const;
 
 type PatternTag = { tag: { id: string; name: string; slug: string } };
@@ -120,28 +121,26 @@ export default function HomePage() {
 
       <main className="bg-content-bg min-h-[calc(100vh-60px)] p-8">
         <div className="max-w-[1400px] mx-auto">
-          <div className="mb-6 relative">
-            <button
-              onClick={toggleMenu}
-              className="flex items-center gap-2 py-1"
-            >
-              <span className="text-xs font-semibold text-muted tracking-tight">
-                Showing: {activeCategoryLabel}
-              </span>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M2 4h12M4 8h8M6 12h4"
-                  stroke="#667691"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <p className="text-xs text-foreground">
-              {loading ? "..." : patterns.length}
-            </p>
+          <div className="mb-6 flex items-center gap-3">
+            <div className="relative inline-block">
+              <button
+                onClick={toggleMenu}
+                className="flex items-center gap-2 py-1"
+              >
+                <span className="text-xs font-semibold text-muted tracking-tight">
+                  Showing: {activeCategoryLabel}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 4h12M4 8h8M6 12h4"
+                    stroke="#667691"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
 
-            {showFilterMenu && (
+              {showFilterMenu && (
               <div
                 ref={menuRef}
                 className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
@@ -166,6 +165,10 @@ export default function HomePage() {
                 ))}
               </div>
             )}
+            </div>
+            <span className="text-xs text-muted">
+              {loading ? "..." : patterns.length}
+            </span>
           </div>
 
           <PatternGrid patterns={patterns} loading={loading} />

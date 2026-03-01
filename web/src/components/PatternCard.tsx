@@ -64,10 +64,11 @@ export function PatternCard({
             </div>
           )}
         </div>
-        <div className="bg-black p-4 flex flex-col gap-2">
-          <h3 className="font-semibold text-sm text-foreground leading-tight tracking-tight">
-            {pattern.title}
-          </h3>
+        <div className="bg-black p-4 flex items-center gap-3">
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <h3 className="font-semibold text-sm text-foreground leading-tight tracking-tight">
+              {pattern.title}
+            </h3>
           {pattern.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {pattern.tags.slice(0, 3).map(({ tag }) => (
@@ -78,7 +79,7 @@ export function PatternCard({
                     e.stopPropagation();
                     router.push(`/?search=${encodeURIComponent(tag.name)}`);
                   }}
-                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[4px] hover:bg-accent-light transition-colors cursor-pointer"
+                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[4px] hover:bg-[#5248d9] transition-colors cursor-pointer"
                 >
                   {tag.name}
                 </span>
@@ -90,6 +91,20 @@ export function PatternCard({
               )}
             </div>
           )}
+          </div>
+          {pattern.authorAvatar ? (
+            <Image
+              src={pattern.authorAvatar}
+              alt={pattern.authorName}
+              width={28}
+              height={28}
+              className="rounded-full shrink-0"
+            />
+          ) : pattern.authorName ? (
+            <div className="w-7 h-7 rounded-full bg-accent/15 flex items-center justify-center text-accent text-xs font-medium shrink-0">
+              {pattern.authorName.charAt(0)}
+            </div>
+          ) : null}
         </div>
       </div>
     </Link>

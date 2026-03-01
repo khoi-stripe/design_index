@@ -109,8 +109,28 @@ export function SearchBar({
         onFocus={() => suggestions.length > 0 && setOpen(true)}
         onKeyDown={handleKeyDown}
         placeholder="Search patterns, tags, contributors..."
-        className="w-full h-9 pl-9 pr-4 text-sm bg-white/5 text-foreground rounded-lg outline-none focus:bg-white/10 transition-all placeholder:text-muted/60"
+        className="w-full h-9 pl-9 pr-9 text-sm bg-white/5 text-foreground rounded-lg outline-none focus:bg-white/10 transition-all placeholder:text-muted/60"
       />
+      {value && (
+        <button
+          onClick={() => {
+            onChange("");
+            setOpen(false);
+            setSuggestions([]);
+            inputRef.current?.focus();
+          }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M1.25628 1.25628C1.59799 0.914573 2.15201 0.914573 2.49372 1.25628L8 6.76256L13.5063 1.25628C13.848 0.914573 14.402 0.914573 14.7437 1.25628C15.0854 1.59799 15.0854 2.15201 14.7437 2.49372L9.23744 8L14.7437 13.5063C15.0854 13.848 15.0854 14.402 14.7437 14.7437C14.402 15.0854 13.848 15.0854 13.5063 14.7437L8 9.23744L2.49372 14.7437C2.15201 15.0854 1.59799 15.0854 1.25628 14.7437C0.914573 14.402 0.914573 13.848 1.25628 13.5063L6.76256 8L1.25628 2.49372C0.914573 2.15201 0.914573 1.59799 1.25628 1.25628Z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      )}
 
       {open && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg overflow-hidden shadow-lg z-50">
