@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+
+type PatternImage = {
+  id: string;
+  screenshotUrl: string;
+  thumbnailUrl: string;
+  dominantColor: string;
+};
 
 type Pattern = {
   id: string;
@@ -18,6 +25,7 @@ type Pattern = {
   featured: boolean;
   createdAt: string;
   tags: { tag: { id: string; name: string; slug: string } }[];
+  images?: PatternImage[];
 };
 
 export function PatternCard({
@@ -29,32 +37,62 @@ export function PatternCard({
   index?: number;
   priority?: boolean;
 }) {
-  const imgSrc = pattern.thumbnailUrl || pattern.screenshotUrl;
   const router = useRouter();
   const [showAvatarTooltip, setShowAvatarTooltip] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const allImages = useMemo(() => {
+    const primary = {
+      src: pattern.thumbnailUrl || pattern.screenshotUrl,
+      dominantColor: pattern.dominantColor,
+    };
+    const additional = (pattern.images || []).map((img) => ({
+      src: img.thumbnailUrl || img.screenshotUrl,
+      dominantColor: img.dominantColor,
+    }));
+    return primary.src ? [primary, ...additional] : additional;
+  }, [pattern]);
+
+  const hasMultiple = allImages.length > 1;
+  const currentImage = allImages[activeIndex] || allImages[0];
+  const imgSrc = currentImage?.src;
+  const bgColor = currentImage?.dominantColor || "#131318";
+
+  const goNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveIndex((i) => (i + 1) % allImages.length);
+  };
+
+  const goPrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveIndex((i) => (i - 1 + allImages.length) % allImages.length);
+  };
 
   return (
     <Link href={`/patterns/${pattern.id}`} className="group block relative">
       <div
         className="absolute -inset-2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
-          background: "radial-gradient(circle at center, #675DFFcc 0%, #675DFF40 50%, transparent 75%)",
+          background: "radial-gradient(circle at center, #533AFDcc 0%, #533AFD40 50%, transparent 75%)",
           filter: "blur(32px)",
         }}
       />
-      <div className="relative rounded-[6px] overflow-hidden transition-all duration-200 group-hover:-translate-y-1">
+      <div className="relative rounded-[4px] overflow-hidden transition-all duration-200 group-hover:-translate-y-1">
         <div
-          className="relative aspect-square flex items-center justify-center p-5"
-          style={{ backgroundColor: pattern.dominantColor || "#131318" }}
+          className="relative aspect-square flex items-center justify-center p-5 transition-colors duration-300"
+          style={{ backgroundColor: bgColor }}
         >
           {imgSrc ? (
             <Image
+              key={imgSrc}
               src={imgSrc}
               alt={pattern.title}
               fill
-              className="object-contain p-5 group-hover:scale-[1.02] transition-transform duration-300"
+              className="object-contain p-5 group-hover:scale-[1.02] transition-transform duration-300 animate-in fade-in duration-200"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority={priority}
+              priority={priority && activeIndex === 0}
             />
           ) : (
             <div className="flex items-center justify-center text-muted/30">
@@ -64,6 +102,48 @@ export function PatternCard({
                 <path d="m21 15-5-5L5 21" />
               </svg>
             </div>
+          )}
+
+          {hasMultiple && (
+            <>
+              <button
+                onClick={goPrev}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110 z-10"
+                aria-label="Previous image"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M11.6187 0.381282C11.9604 0.72299 11.9604 1.27701 11.6187 1.61872L5.23744 8L11.6187 14.3813C11.9604 14.723 11.9604 15.277 11.6187 15.6187C11.277 15.9604 10.723 15.9604 10.3813 15.6187L3.38128 8.61872C3.03957 8.27701 3.03957 7.72299 3.38128 7.38128L10.3813 0.381282C10.723 0.0395728 11.277 0.0395728 11.6187 0.381282Z" fill="#474E5A" />
+                </svg>
+              </button>
+              <button
+                onClick={goNext}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110 z-10"
+                aria-label="Next image"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M4.38128 0.381282C4.03957 0.72299 4.03957 1.27701 4.38128 1.61872L10.7626 8L4.38128 14.3813C4.03957 14.723 4.03957 15.277 4.38128 15.6187C4.72299 15.9604 5.27701 15.9604 5.61872 15.6187L12.6187 8.61872C12.9604 8.27701 12.9604 7.72299 12.6187 7.38128L5.61872 0.381282C5.27701 0.0395728 4.72299 0.0395728 4.38128 0.381282Z" fill="#474E5A" />
+                </svg>
+              </button>
+
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                {allImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setActiveIndex(i);
+                    }}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                      i === activeIndex
+                        ? "bg-white scale-125"
+                        : "bg-white/40 hover:bg-white/70"
+                    }`}
+                    aria-label={`Go to image ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
         <div className="bg-black p-4 flex items-center gap-3">
@@ -81,7 +161,7 @@ export function PatternCard({
                     e.stopPropagation();
                     router.push(`/?search=${encodeURIComponent(tag.name)}`);
                   }}
-                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[2px] hover:bg-[#5248d9] transition-colors cursor-pointer"
+                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[2px] hover:bg-[#4E11E2] transition-colors cursor-pointer"
                 >
                   {tag.name}
                 </span>

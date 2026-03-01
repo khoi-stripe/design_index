@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Tagger } from "./components/Tagger";
+import { Updater } from "./components/Updater";
+import { ModeChooser } from "./components/ModeChooser";
 import "./styles.css";
 
 export type SelectionNode = {
@@ -31,6 +33,7 @@ export default function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [fileUrlInput, setFileUrlInput] = useState("");
   const [fileKeyError, setFileKeyError] = useState("");
+  const [mode, setMode] = useState<"choose" | "add" | "update">("choose");
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -81,20 +84,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="header">
-        <div className="header-logo">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M0 12L12 9.45516V0L0 2.57459V12Z"
-              fill="white"
-            />
-          </svg>
-          <span className="header-title">Design.Index</span>
-        </div>
-      </div>
-
       {!hasSelection ? (
         <div className="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#667691" strokeWidth="1.5">
@@ -111,7 +100,7 @@ export default function App() {
       ) : showFileKeyPrompt ? (
         <div className="file-key-prompt">
           <div className="file-key-prompt-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#675DFF" strokeWidth="1.5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#533AFD" strokeWidth="1.5">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
             </svg>
@@ -136,11 +125,24 @@ export default function App() {
           </div>
           {fileKeyError && <div className="error">{fileKeyError}</div>}
         </div>
-      ) : (
+      ) : mode === "choose" ? (
+        <ModeChooser
+          onAdd={() => setMode("add")}
+          onUpdate={() => setMode("update")}
+        />
+      ) : mode === "add" ? (
         <Tagger
           selections={selections}
           fileKey={fileKey}
           user={user}
+          onBack={() => setMode("choose")}
+        />
+      ) : (
+        <Updater
+          selections={selections}
+          fileKey={fileKey}
+          user={user}
+          onBack={() => setMode("choose")}
         />
       )}
     </div>

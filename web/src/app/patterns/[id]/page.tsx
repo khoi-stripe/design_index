@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 type Tag = { id: string; name: string; slug: string };
 type PatternVersion = {
@@ -239,7 +240,7 @@ export default function PatternDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-[1100px] mx-auto px-6 py-12">
+        <div className="max-w-[1400px] mx-auto px-6 py-12">
           <div className="animate-pulse space-y-6">
             <div className="h-6 bg-surface rounded w-48" />
             <div className="aspect-[16/10] bg-surface rounded-xl" />
@@ -267,28 +268,20 @@ export default function PatternDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
-        <div className="max-w-[1100px] mx-auto px-6 h-14 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Back
-          </button>
+        <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+          <Breadcrumb currentId={pattern.id} currentTitle={pattern.title} />
           <div className="flex items-center gap-2">
             {!editing && (
               <>
                 <button
                   onClick={startEditing}
-                  className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-md transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="px-3 py-1.5 text-xs font-medium text-red-400 bg-surface hover:bg-red-500/10 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-red-400 bg-surface hover:bg-red-500/10 rounded-[4px] transition-colors"
                 >
                   Delete
                 </button>
@@ -308,14 +301,14 @@ export default function PatternDetailPage() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-md transition-colors"
+                className="px-4 py-2 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={deletePattern}
                 disabled={deleting}
-                className="px-4 py-2 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded-[4px] transition-colors disabled:opacity-50"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>
@@ -324,17 +317,16 @@ export default function PatternDetailPage() {
         </div>
       )}
 
-      <div className="max-w-[1100px] mx-auto px-6 py-10">
+      <div className="max-w-[1400px] mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
-          <div className="space-y-3">
-            <div className="relative rounded-xl border border-border overflow-hidden bg-surface group">
+          <div className="space-y-3 min-w-0">
+            <div className="relative rounded-xl border border-border overflow-hidden bg-surface group w-full h-[70vh] max-h-[800px]">
               {allImages.length > 0 ? (
                 <Image
                   src={allImages[activeImageIndex]?.url || displayScreenshot}
                   alt={allImages[activeImageIndex]?.label || pattern.title}
-                  width={1200}
-                  height={800}
-                  className="w-full h-auto"
+                  fill
+                  className="object-contain"
                 />
               ) : (
                 <div className="aspect-[16/10] flex items-center justify-center text-muted/30">
@@ -414,7 +406,7 @@ export default function PatternDetailPage() {
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-md outline-none focus:border-accent"
+                      className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
                     />
                   </div>
 
@@ -424,7 +416,7 @@ export default function PatternDetailPage() {
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-md outline-none focus:border-accent resize-y"
+                      className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent resize-y"
                     />
                   </div>
 
@@ -435,7 +427,7 @@ export default function PatternDetailPage() {
                         <button
                           key={cat.value}
                           onClick={() => setEditCategory(cat.value)}
-                          className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                          className={`px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
                             editCategory === cat.value
                               ? "bg-accent text-white font-medium"
                               : "bg-surface text-foreground border border-border hover:bg-surface-hover"
@@ -451,7 +443,7 @@ export default function PatternDetailPage() {
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-muted/60">Tags</label>
                     <div className="flex flex-wrap gap-1.5">
                       {editTags.map((slug) => (
-                        <span key={slug} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-accent text-white rounded-md">
+                        <span key={slug} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-accent text-white rounded-[4px]">
                           {slug.replace(/-/g, " ")}
                           <button onClick={() => removeTag(slug)} className="hover:text-white/60">
                             <svg width="10" height="10" viewBox="0 0 10 10">
@@ -468,10 +460,10 @@ export default function PatternDetailPage() {
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addTag()}
                         placeholder="Add tag..."
-                        className="flex-1 px-3 py-1.5 text-xs bg-surface text-foreground border border-border rounded-md outline-none focus:border-accent"
+                        className="flex-1 px-3 py-1.5 text-xs bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
                       />
                       {newTag && (
-                        <button onClick={addTag} className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-md">
+                        <button onClick={addTag} className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-[4px]">
                           Add
                         </button>
                       )}
@@ -557,7 +549,7 @@ export default function PatternDetailPage() {
                           placeholder="Paste Figma link..."
                           value={versionUrl}
                           onChange={(e) => setVersionUrl(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-md focus:outline-none focus:border-accent"
+                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
                           autoFocus
                         />
                         <input
@@ -565,14 +557,14 @@ export default function PatternDetailPage() {
                           placeholder="Label (optional, e.g. 'Dark mode variant')"
                           value={versionLabel}
                           onChange={(e) => setVersionLabel(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-md focus:outline-none focus:border-accent"
+                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
                         />
                         <textarea
                           placeholder="Description (optional)"
                           value={versionDescription}
                           onChange={(e) => setVersionDescription(e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-md focus:outline-none focus:border-accent resize-y"
+                          className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent resize-y"
                         />
                         <div>
                           <div className="flex flex-wrap gap-1 mb-1.5">
@@ -594,10 +586,10 @@ export default function PatternDetailPage() {
                               onChange={(e) => setNewVersionTag(e.target.value)}
                               onKeyDown={(e) => e.key === "Enter" && addVersionTag()}
                               placeholder="Add tag..."
-                              className="flex-1 px-2 py-1 text-xs bg-background text-foreground border border-border rounded-md outline-none focus:border-accent"
+                              className="flex-1 px-2 py-1 text-xs bg-background text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
                             />
                             {newVersionTag && (
-                              <button onClick={addVersionTag} className="px-2 py-1 text-xs font-medium bg-accent text-white rounded-md">
+                              <button onClick={addVersionTag} className="px-2 py-1 text-xs font-medium bg-accent text-white rounded-[4px]">
                                 Add
                               </button>
                             )}
@@ -607,13 +599,13 @@ export default function PatternDetailPage() {
                           <button
                             onClick={addVersion}
                             disabled={addingVersion || !versionUrl.trim()}
-                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-md hover:bg-accent-light transition-colors disabled:opacity-50"
+                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-light transition-colors disabled:opacity-50"
                           >
                             {addingVersion ? "Fetching screenshot..." : "Add version"}
                           </button>
                           <button
                             onClick={() => { setShowAddVersion(false); setVersionUrl(""); setVersionLabel(""); setVersionDescription(""); setVersionTags([]); }}
-                            className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-md transition-colors"
+                            className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-[4px] transition-colors"
                           >
                             Cancel
                           </button>
@@ -643,7 +635,7 @@ export default function PatternDetailPage() {
                           placeholder="Paste Figma link..."
                           value={versionUrl}
                           onChange={(e) => setVersionUrl(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-md focus:outline-none focus:border-accent"
+                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
                           autoFocus
                         />
                         <input
@@ -651,26 +643,26 @@ export default function PatternDetailPage() {
                           placeholder="Label (optional)"
                           value={versionLabel}
                           onChange={(e) => setVersionLabel(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-md focus:outline-none focus:border-accent"
+                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
                         />
                         <textarea
                           placeholder="Description (optional)"
                           value={versionDescription}
                           onChange={(e) => setVersionDescription(e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-md focus:outline-none focus:border-accent resize-y"
+                          className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent resize-y"
                         />
                         <div className="flex gap-2 pt-1">
                           <button
                             onClick={addVersion}
                             disabled={addingVersion || !versionUrl.trim()}
-                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-md hover:bg-accent-light transition-colors disabled:opacity-50"
+                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-light transition-colors disabled:opacity-50"
                           >
                             {addingVersion ? "Fetching screenshot..." : "Add version"}
                           </button>
                           <button
                             onClick={() => { setShowAddVersion(false); setVersionUrl(""); setVersionLabel(""); setVersionDescription(""); }}
-                            className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-md transition-colors"
+                            className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-[4px] transition-colors"
                           >
                             Cancel
                           </button>
@@ -713,7 +705,7 @@ export default function PatternDetailPage() {
                   {pattern.category && (
                     <div>
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Category</h3>
-                      <span className="inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-md capitalize">
+                      <span className="inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-[4px] capitalize">
                         {pattern.category}
                       </span>
                     </div>
@@ -727,7 +719,7 @@ export default function PatternDetailPage() {
                           <Link
                             key={tag.id}
                             href={`/?search=${encodeURIComponent(tag.name)}`}
-                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-[2px] hover:bg-[#5248d9] transition-colors"
+                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-[2px] hover:bg-[#4E11E2] transition-colors"
                           >
                             {tag.name}
                           </Link>

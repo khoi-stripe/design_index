@@ -48,7 +48,7 @@ export function FilterSidebar({
             onClick={() =>
               onTagChange(activeTag === tag.slug ? null : tag.slug)
             }
-            className={`w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors flex items-center justify-between ${
+            className={`w-full text-left px-3 py-1.5 text-sm rounded-[4px] transition-colors flex items-center justify-between ${
               activeTag === tag.slug
                 ? "bg-accent text-white font-medium"
                 : "text-muted hover:text-foreground hover:bg-surface-hover"

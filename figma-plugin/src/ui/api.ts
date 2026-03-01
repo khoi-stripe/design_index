@@ -57,3 +57,72 @@ export async function fetchTags(): Promise<
   if (!res.ok) throw new Error("Failed to fetch tags");
   return res.json();
 }
+
+export async function searchPatterns(query: string): Promise<{
+  patterns: {
+    id: string;
+    title: string;
+    description: string;
+    screenshotUrl: string;
+    thumbnailUrl: string;
+    dominantColor: string;
+    authorName: string;
+    authorAvatar: string;
+    category: string;
+    createdAt: string;
+    tags: { tag: { id: string; name: string; slug: string } }[];
+  }[];
+  total: number;
+}> {
+  const params = new URLSearchParams({ search: query, limit: "10" });
+  const res = await fetch(`${API_BASE}/patterns?${params}`);
+  if (!res.ok) throw new Error("Failed to search patterns");
+  return res.json();
+}
+
+export async function addVersion(
+  patternId: string,
+  data: {
+    screenshotUrl: string;
+    thumbnailUrl: string;
+    dominantColor: string;
+    description?: string;
+    tags?: string[];
+    label?: string;
+    additionalImages?: {
+      screenshotUrl: string;
+      thumbnailUrl: string;
+      dominantColor: string;
+      label: string;
+      nodeId: string;
+      nodeName: string;
+      sortOrder: number;
+    }[];
+  }
+) {
+  const res = await fetch(`${API_BASE}/patterns/${patternId}/versions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to add version");
+  return res.json();
+}
+
+export async function updatePatternMeta(
+  patternId: string,
+  data: {
+    title?: string;
+    description?: string;
+    category?: string;
+    tags?: string[];
+  }
+) {
+  const res = await fetch(`${API_BASE}/patterns/${patternId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update pattern");
+  return res.json();
+}

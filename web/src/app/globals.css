@@ -5,17 +5,17 @@
   --content-bg: #0f0f14;
   --foreground: #95a4ba;
   --foreground-bright: #c8d1dc;
-  --accent: #675dff;
-  --accent-light: #7a73ff;
+  --accent: #533AFD;
+  --accent-light: #4E11E2;
   --accent-bg: #1a1830;
   --border: #1e1e2e;
   --muted: #667691;
   --card-bg: #000000;
   --card-hover: #0a0a0f;
-  --tag-bg: #675dff;
+  --tag-bg: #533AFD;
   --tag-text: #ffffff;
   --surface: #131318;
-  --surface-hover: #1a1a22;
+  --surface-hover: #0e0e13;
 }
 
 @theme inline {

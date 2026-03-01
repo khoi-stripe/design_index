@@ -29,7 +29,7 @@ export function PatternGrid({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="animate-pulse">
-            <div className="rounded-[6px] overflow-hidden">
+            <div className="rounded-[4px] overflow-hidden">
               <div className="aspect-square bg-surface" />
               <div className="bg-black p-4 space-y-2">
                 <div className="h-4 bg-surface rounded w-3/4" />

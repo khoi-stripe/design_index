@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
+import { clearBreadcrumbTrail } from "@/components/Breadcrumb";
 
 const CATEGORIES = [
   { value: null, label: "All" },
@@ -14,6 +15,12 @@ const CATEGORIES = [
 ] as const;
 
 type PatternTag = { tag: { id: string; name: string; slug: string } };
+type PatternImage = {
+  id: string;
+  screenshotUrl: string;
+  thumbnailUrl: string;
+  dominantColor: string;
+};
 type Pattern = {
   id: string;
   title: string;
@@ -28,6 +35,7 @@ type Pattern = {
   createdAt: string;
   category: string;
   tags: PatternTag[];
+  images: PatternImage[];
 };
 
 export default function HomePage() {
@@ -63,6 +71,10 @@ export default function HomePage() {
       openMenu();
     }
   };
+
+  useEffect(() => {
+    clearBreadcrumbTrail();
+  }, []);
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
@@ -154,7 +166,7 @@ export default function HomePage() {
                       setActiveCategory(cat.value);
                       closeMenu();
                     }}
-                    className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
+                    className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
                       activeCategory === cat.value
                         ? "bg-accent text-white font-medium"
                         : "text-foreground hover:bg-surface-hover"

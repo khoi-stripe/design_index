@@ -52,7 +52,7 @@ model PatternVersion {
   versionNumber Int
   label         String   @default("")
   description   String   @default("")
-  figmaUrl      String
+  figmaUrl      String   @default("")
   screenshotUrl String   @default("")
   thumbnailUrl  String   @default("")
   dominantColor String   @default("")

@@ -11,30 +11,32 @@ export async function POST(
   const body = await request.json();
   const { figmaUrl, label, description, tags } = body;
 
-  if (!figmaUrl) {
-    return NextResponse.json({ error: "Figma URL is required" }, { status: 400 });
+  let screenshotUrl = body.screenshotUrl || "";
+  let thumbnailUrl = body.thumbnailUrl || "";
+  let dominantColor = body.dominantColor || "";
+
+  if (!screenshotUrl && !figmaUrl) {
+    return NextResponse.json({ error: "Figma URL or screenshot URL is required" }, { status: 400 });
   }
 
-  let screenshotUrl = "";
-  let thumbnailUrl = "";
-  let dominantColor = "";
+  if (!screenshotUrl && figmaUrl) {
+    try {
+      const origin = request.nextUrl.origin;
+      const screenshotRes = await fetch(`${origin}${FIGMA_SCREENSHOT_URL}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ figmaUrl }),
+      });
 
-  try {
-    const origin = request.nextUrl.origin;
-    const screenshotRes = await fetch(`${origin}${FIGMA_SCREENSHOT_URL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ figmaUrl }),
-    });
-
-    if (screenshotRes.ok) {
-      const screenshotData = await screenshotRes.json();
-      screenshotUrl = screenshotData.screenshotUrl;
-      thumbnailUrl = screenshotData.thumbnailUrl;
-      dominantColor = screenshotData.dominantColor;
+      if (screenshotRes.ok) {
+        const screenshotData = await screenshotRes.json();
+        screenshotUrl = screenshotData.screenshotUrl;
+        thumbnailUrl = screenshotData.thumbnailUrl;
+        dominantColor = screenshotData.dominantColor;
+      }
+    } catch {
+      // Screenshot fetch failed — continue without it
     }
-  } catch {
-    // Screenshot fetch failed — continue without it
   }
 
   const maxVersion = await prisma.patternVersion.aggregate({
@@ -62,7 +64,7 @@ export async function POST(
     data: {
       patternId: id,
       versionNumber,
-      figmaUrl,
+      figmaUrl: figmaUrl || "",
       label: label || `v${versionNumber}`,
       description: description || "",
       screenshotUrl,
@@ -73,7 +75,7 @@ export async function POST(
     include: { tags: { include: { tag: true } } },
   });
 
-  const figmaDeepLink = figmaUrl.startsWith("http") ? figmaUrl : "";
+  const figmaDeepLink = figmaUrl && figmaUrl.startsWith("http") ? figmaUrl : "";
   await prisma.pattern.update({
     where: { id },
     data: {
@@ -83,6 +85,25 @@ export async function POST(
       ...(figmaDeepLink ? { figmaDeepLink } : {}),
     },
   });
+
+  const additionalImages = body.additionalImages;
+  if (additionalImages?.length) {
+    for (let i = 0; i < additionalImages.length; i++) {
+      const img = additionalImages[i];
+      await prisma.patternImage.create({
+        data: {
+          patternId: id,
+          screenshotUrl: img.screenshotUrl,
+          thumbnailUrl: img.thumbnailUrl || img.screenshotUrl,
+          dominantColor: img.dominantColor || "",
+          label: img.label || "",
+          nodeId: img.nodeId || "",
+          nodeName: img.nodeName || "",
+          sortOrder: img.sortOrder ?? i + 1,
+        },
+      });
+    }
+  }
 
   return NextResponse.json(version, { status: 201 });
 }
