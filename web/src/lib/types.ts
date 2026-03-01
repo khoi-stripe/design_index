@@ -19,6 +19,7 @@ export type Pattern = {
   id: string;
   title: string;
   description: string;
+  category: string;
   screenshotUrl: string;
   thumbnailUrl: string;
   dominantColor: string;

@@ -99,7 +99,7 @@ export function Breadcrumb({
 
       {visiblePrevious.map((item, i) => (
         <span key={item === "ellipsis" ? "ellipsis" : item.id} className="flex items-center gap-1.5 min-w-0">
-          <span className="text-muted/40 shrink-0">→</span>
+          <span className="text-muted/60 shrink-0">→</span>
           {item === "ellipsis" ? (
             <button
               onClick={() => setExpanded(true)}
@@ -120,7 +120,7 @@ export function Breadcrumb({
 
       {currentCrumb && (
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-muted/40 shrink-0">→</span>
+          <span className="text-muted/60 shrink-0">→</span>
           <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
             {currentCrumb.title}
           </span>

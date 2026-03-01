@@ -266,6 +266,7 @@ export default function HomePage() {
             </div>
           </div>
 
+          <div className="pt-1" />
           <PatternGrid
             patterns={patterns}
             loading={loading}

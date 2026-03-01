@@ -68,6 +68,11 @@ export function PatternCard({
           {!imageLoaded && imgSrc && (
             <div className="absolute inset-0 bg-surface animate-pulse" />
           )}
+          {pattern.category && (
+            <span className="absolute top-2 left-2 z-10 px-2.5 py-1 text-xs font-medium bg-black/70 text-white rounded-[4px] capitalize opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              {pattern.category}
+            </span>
+          )}
           {imgSrc ? (
             <Image
               key={imgSrc}
