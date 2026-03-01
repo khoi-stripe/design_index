@@ -1,4 +1,4 @@
-figma.showUI(__html__, { width: 360, height: 520, themeColors: true });
+figma.showUI(__html__, { width: 360, height: 560, themeColors: true });
 
 function getFileKey(): string {
   if (figma.fileKey) return figma.fileKey;
@@ -21,13 +21,10 @@ function sendSelection() {
     return;
   }
 
-  const node = selection[0];
-  const existingTags = node.getSharedPluginData("index_patterns", "tags");
-  const existingMeta = node.getSharedPluginData("index_patterns", "metadata");
-
-  figma.ui.postMessage({
-    type: "selection",
-    data: {
+  const nodes = selection.map((node) => {
+    const existingTags = node.getSharedPluginData("index_patterns", "tags");
+    const existingMeta = node.getSharedPluginData("index_patterns", "metadata");
+    return {
       id: node.id,
       name: node.name,
       type: node.type,
@@ -36,8 +33,10 @@ function sendSelection() {
       pageName: figma.currentPage.name,
       existingTags: existingTags ? JSON.parse(existingTags) : [],
       existingMeta: existingMeta ? JSON.parse(existingMeta) : null,
-    },
+    };
   });
+
+  figma.ui.postMessage({ type: "selection", data: nodes });
 }
 
 figma.on("selectionchange", () => {
@@ -45,11 +44,76 @@ figma.on("selectionchange", () => {
   sendFileKey();
 });
 
+let captureQueue: readonly SceneNode[] = [];
+let captureIndex = 0;
+
+async function captureCurrentNode() {
+  if (captureIndex >= captureQueue.length) {
+    figma.ui.postMessage({ type: "capture-all-done" });
+    return;
+  }
+
+  const node = captureQueue[captureIndex];
+  const nodeId = node.id;
+  const nodeName = node.name;
+
+  if (!("exportAsync" in node)) {
+    figma.ui.postMessage({
+      type: "capture-single",
+      index: captureIndex,
+      nodeId,
+      nodeName,
+      error: "Cannot export this node",
+    });
+    return;
+  }
+
+  try {
+    const bytes = await node.exportAsync({
+      format: "PNG",
+      constraint: { type: "SCALE", value: 2 },
+    });
+    figma.ui.postMessage({
+      type: "capture-single",
+      index: captureIndex,
+      nodeId,
+      nodeName,
+      data: bytes,
+    });
+  } catch (e) {
+    figma.ui.postMessage({
+      type: "capture-single",
+      index: captureIndex,
+      nodeId,
+      nodeName,
+      error: String(e),
+    });
+  }
+}
+
 figma.ui.onmessage = async (msg) => {
   if (msg.type === "get-selection") {
     sendSelection();
   }
 
+  if (msg.type === "capture-all-screenshots") {
+    const selection = figma.currentPage.selection;
+    if (selection.length === 0) {
+      figma.ui.postMessage({ type: "capture-all-done" });
+      return;
+    }
+
+    captureQueue = [...selection];
+    captureIndex = 0;
+    await captureCurrentNode();
+  }
+
+  if (msg.type === "capture-next") {
+    captureIndex++;
+    await captureCurrentNode();
+  }
+
+  // Legacy single capture
   if (msg.type === "capture-screenshot") {
     const selection = figma.currentPage.selection;
     if (selection.length === 0) {
@@ -84,17 +148,18 @@ figma.ui.onmessage = async (msg) => {
     const selection = figma.currentPage.selection;
     if (selection.length === 0) return;
 
-    const node = selection[0];
-    node.setSharedPluginData(
-      "index_patterns",
-      "tags",
-      JSON.stringify(msg.tags)
-    );
-    node.setSharedPluginData(
-      "index_patterns",
-      "metadata",
-      JSON.stringify(msg.metadata)
-    );
+    for (const node of selection) {
+      node.setSharedPluginData(
+        "index_patterns",
+        "tags",
+        JSON.stringify(msg.tags)
+      );
+      node.setSharedPluginData(
+        "index_patterns",
+        "metadata",
+        JSON.stringify(msg.metadata)
+      );
+    }
 
     figma.ui.postMessage({ type: "saved" });
   }

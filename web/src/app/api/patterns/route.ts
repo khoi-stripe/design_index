@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, dominantColor, authorName, authorAvatar, tags, category } = body;
+  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, dominantColor, authorName, authorAvatar, tags, category, additionalImages } = body;
 
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -69,11 +69,26 @@ export async function POST(request: NextRequest) {
       ? `https://www.figma.com/design/${figmaFileKey}?node-id=${encodeURIComponent(figmaNodeId)}`
       : "";
 
+  const resolvedTags: { tagId: string }[] = [];
+  if (tags?.length) {
+    for (const tagSlug of tags as string[]) {
+      const tag = await prisma.tag.upsert({
+        where: { slug: tagSlug },
+        update: {},
+        create: {
+          name: tagSlug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+          slug: tagSlug,
+        },
+      });
+      resolvedTags.push({ tagId: tag.id });
+    }
+  }
+
   const pattern = await prisma.pattern.create({
     data: {
       title,
       description: description || "",
-      category: category || "pattern",
+      category: category || "flow",
       dominantColor: dominantColor || "",
       figmaFileKey: figmaFileKey || "",
       figmaNodeId: figmaNodeId || "",
@@ -83,26 +98,48 @@ export async function POST(request: NextRequest) {
       thumbnailUrl: thumbnailUrl || screenshotUrl || "",
       authorName: authorName || "",
       authorAvatar: authorAvatar || "",
-      tags: tags?.length
-        ? {
-            create: await Promise.all(
-              tags.map(async (tagSlug: string) => {
-                const tag = await prisma.tag.upsert({
-                  where: { slug: tagSlug },
-                  update: {},
-                  create: {
-                    name: tagSlug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                    slug: tagSlug,
-                  },
-                });
-                return { tagId: tag.id };
-              })
-            ),
-          }
+      tags: resolvedTags.length
+        ? { create: resolvedTags.map((t) => ({ tagId: t.tagId })) }
         : undefined,
     },
     include: { tags: { include: { tag: true } } },
   });
+
+  await prisma.patternVersion.create({
+    data: {
+      patternId: pattern.id,
+      versionNumber: 1,
+      label: "v1",
+      figmaUrl: figmaDeepLink,
+      description: description || "",
+      screenshotUrl: screenshotUrl || "",
+      thumbnailUrl: thumbnailUrl || screenshotUrl || "",
+      dominantColor: dominantColor || "",
+      authorName: authorName || "",
+      authorAvatar: authorAvatar || "",
+      tags: resolvedTags.length
+        ? { create: resolvedTags.map((t) => ({ tagId: t.tagId })) }
+        : undefined,
+    },
+  });
+
+  if (additionalImages?.length) {
+    for (let i = 0; i < additionalImages.length; i++) {
+      const img = additionalImages[i];
+      await prisma.patternImage.create({
+        data: {
+          patternId: pattern.id,
+          screenshotUrl: img.screenshotUrl,
+          thumbnailUrl: img.thumbnailUrl || img.screenshotUrl,
+          dominantColor: img.dominantColor || "",
+          label: img.label || "",
+          nodeId: img.nodeId || "",
+          nodeName: img.nodeName || "",
+          sortOrder: i + 1,
+        },
+      });
+    }
+  }
 
   return NextResponse.json(pattern, { status: 201 });
 }

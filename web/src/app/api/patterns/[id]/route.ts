@@ -11,6 +11,11 @@ export async function GET(
     where: { id },
     include: {
       tags: { include: { tag: true } },
+      versions: {
+        orderBy: { createdAt: "desc" },
+        include: { tags: { include: { tag: true } } },
+      },
+      images: { orderBy: { sortOrder: "asc" } },
       collectionPatterns: {
         include: { collection: true },
       },

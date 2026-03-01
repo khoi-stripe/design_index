@@ -7,8 +7,8 @@ import { PatternGrid } from "@/components/PatternGrid";
 
 const CATEGORIES = [
   { value: null, label: "All" },
+  { value: "flow", label: "Flows" },
   { value: "screen", label: "Screens" },
-  { value: "pattern", label: "Patterns" },
   { value: "component", label: "Components" },
   { value: "asset", label: "Assets" },
 ] as const;

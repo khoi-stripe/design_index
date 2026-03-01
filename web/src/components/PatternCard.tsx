@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -30,6 +31,7 @@ export function PatternCard({
 }) {
   const imgSrc = pattern.thumbnailUrl || pattern.screenshotUrl;
   const router = useRouter();
+  const [showAvatarTooltip, setShowAvatarTooltip] = useState(false);
 
   return (
     <Link href={`/patterns/${pattern.id}`} className="group block relative">
@@ -79,7 +81,7 @@ export function PatternCard({
                     e.stopPropagation();
                     router.push(`/?search=${encodeURIComponent(tag.name)}`);
                   }}
-                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[4px] hover:bg-[#5248d9] transition-colors cursor-pointer"
+                  className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[2px] hover:bg-[#5248d9] transition-colors cursor-pointer"
                 >
                   {tag.name}
                 </span>
@@ -92,19 +94,34 @@ export function PatternCard({
             </div>
           )}
           </div>
-          {pattern.authorAvatar ? (
-            <Image
-              src={pattern.authorAvatar}
-              alt={pattern.authorName}
-              width={28}
-              height={28}
-              className="rounded-full shrink-0"
-            />
-          ) : pattern.authorName ? (
-            <div className="w-7 h-7 rounded-full bg-accent/15 flex items-center justify-center text-accent text-xs font-medium shrink-0">
-              {pattern.authorName.charAt(0)}
+          {(pattern.authorAvatar || pattern.authorName) && (
+            <div
+              className="relative shrink-0"
+              onMouseEnter={() => setShowAvatarTooltip(true)}
+              onMouseLeave={() => setShowAvatarTooltip(false)}
+            >
+              {pattern.authorAvatar ? (
+                <Image
+                  src={pattern.authorAvatar}
+                  alt={pattern.authorName}
+                  width={28}
+                  height={28}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-accent/15 flex items-center justify-center text-accent text-xs font-medium">
+                  {pattern.authorName.charAt(0)}
+                </div>
+              )}
+              {showAvatarTooltip && pattern.authorName && (
+                <div className="absolute bottom-full right-0 mb-2 menu-spring-enter" style={{ transformOrigin: "bottom right" }}>
+                  <div className="bg-background border border-border rounded-lg px-3 py-1.5 shadow-lg whitespace-nowrap">
+                    <span className="text-xs font-medium text-foreground">{pattern.authorName}</span>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </Link>

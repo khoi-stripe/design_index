@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Tagger } from "./components/Tagger";
 import "./styles.css";
 
-type SelectionData = {
+export type SelectionNode = {
   id: string;
   name: string;
   type: string;
@@ -26,7 +26,7 @@ function extractFileKey(url: string): string | null {
 }
 
 export default function App() {
-  const [selection, setSelection] = useState<SelectionData | null>(null);
+  const [selections, setSelections] = useState<SelectionNode[]>([]);
   const [fileKey, setFileKey] = useState<string>("");
   const [user, setUser] = useState<UserData | null>(null);
   const [fileUrlInput, setFileUrlInput] = useState("");
@@ -38,7 +38,13 @@ export default function App() {
       if (!msg) return;
 
       if (msg.type === "selection") {
-        setSelection(msg.data);
+        if (msg.data === null) {
+          setSelections([]);
+        } else if (Array.isArray(msg.data)) {
+          setSelections(msg.data);
+        } else {
+          setSelections([msg.data]);
+        }
       }
       if (msg.type === "file-key") {
         setFileKey(msg.data || "");
@@ -70,23 +76,26 @@ export default function App() {
     );
   };
 
-  const showFileKeyPrompt = !fileKey && selection;
+  const hasSelection = selections.length > 0;
+  const showFileKeyPrompt = !fileKey && hasSelection;
 
   return (
     <div className="app">
       <div className="header">
         <div className="header-logo">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-            <rect x="2" y="2" width="5" height="5" rx="1" fill="#635BFF" />
-            <rect x="9" y="2" width="5" height="5" rx="1" fill="#635BFF" opacity="0.6" />
-            <rect x="2" y="9" width="5" height="5" rx="1" fill="#635BFF" opacity="0.6" />
-            <rect x="9" y="9" width="5" height="5" rx="1" fill="#635BFF" opacity="0.3" />
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M0 12L12 9.45516V0L0 2.57459V12Z"
+              fill="white"
+            />
           </svg>
-          <span className="header-title">Index</span>
+          <span className="header-title">Design.Index</span>
         </div>
       </div>
 
-      {!selection ? (
+      {!hasSelection ? (
         <div className="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#667691" strokeWidth="1.5">
             <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -94,9 +103,9 @@ export default function App() {
             <rect x="3" y="14" width="7" height="7" rx="1" />
             <rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
-          <p className="empty-title">Select a frame</p>
+          <p className="empty-title">Select frames</p>
           <p className="empty-desc">
-            Select a frame or component to tag it as a pattern
+            Select one or more frames to tag as a pattern
           </p>
         </div>
       ) : showFileKeyPrompt ? (
@@ -129,7 +138,7 @@ export default function App() {
         </div>
       ) : (
         <Tagger
-          selection={selection}
+          selections={selections}
           fileKey={fileKey}
           user={user}
         />

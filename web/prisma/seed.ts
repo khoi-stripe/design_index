@@ -31,7 +31,7 @@ const PATTERNS = [
     title: "Pricing Table",
     description: "Three-tier pricing comparison table with feature breakdown, toggle for monthly/annual billing.",
     tags: ["pricing", "comparison", "billing"],
-    category: "pattern",
+    category: "flow",
     author: "Alex Rivera",
     featured: true,
   },
@@ -39,7 +39,7 @@ const PATTERNS = [
     title: "Payment Confirmation Modal",
     description: "Success modal shown after a payment is processed, with receipt summary and next actions.",
     tags: ["modal", "payment", "confirmation"],
-    category: "pattern",
+    category: "flow",
     author: "Jordan Lee",
   },
   {
@@ -54,7 +54,7 @@ const PATTERNS = [
     title: "Transaction Activity Feed",
     description: "Chronological list of payment events with status indicators, amounts, and expandable details.",
     tags: ["activity-feed", "transactions", "list"],
-    category: "pattern",
+    category: "flow",
     author: "Mike Thompson",
   },
   {
@@ -68,7 +68,7 @@ const PATTERNS = [
     title: "Empty State — No Transactions",
     description: "Friendly empty state for new accounts with no transaction history yet.",
     tags: ["empty-state", "illustration"],
-    category: "pattern",
+    category: "flow",
     author: "Priya Patel",
   },
   {

@@ -30,6 +30,15 @@ export async function createPattern(data: {
   authorName: string;
   authorAvatar: string;
   tags: string[];
+  additionalImages?: {
+    screenshotUrl: string;
+    thumbnailUrl: string;
+    dominantColor: string;
+    label: string;
+    nodeId: string;
+    nodeName: string;
+    sortOrder: number;
+  }[];
 }) {
   const res = await fetch(`${API_BASE}/patterns`, {
     method: "POST",

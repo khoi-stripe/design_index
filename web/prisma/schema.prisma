@@ -20,14 +20,56 @@ model Pattern {
   dominantColor String   @default("")
   authorName    String   @default("")
   authorAvatar  String   @default("")
-  category      String   @default("pattern")
+  category      String   @default("flow")
   status        String   @default("published")
   featured      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   tags               PatternTag[]
+  versions           PatternVersion[]
+  images             PatternImage[]
   collectionPatterns CollectionPattern[]
+}
+
+model PatternImage {
+  id            String   @id @default(uuid())
+  patternId     String
+  screenshotUrl String
+  thumbnailUrl  String   @default("")
+  dominantColor String   @default("")
+  label         String   @default("")
+  nodeId        String   @default("")
+  nodeName      String   @default("")
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  pattern       Pattern  @relation(fields: [patternId], references: [id], onDelete: Cascade)
+}
+
+model PatternVersion {
+  id            String   @id @default(uuid())
+  patternId     String
+  versionNumber Int
+  label         String   @default("")
+  description   String   @default("")
+  figmaUrl      String
+  screenshotUrl String   @default("")
+  thumbnailUrl  String   @default("")
+  dominantColor String   @default("")
+  authorName    String   @default("")
+  authorAvatar  String   @default("")
+  createdAt     DateTime @default(now())
+  pattern       Pattern  @relation(fields: [patternId], references: [id], onDelete: Cascade)
+  tags          PatternVersionTag[]
+}
+
+model PatternVersionTag {
+  versionId String
+  tagId     String
+  version   PatternVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  tag        Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([versionId, tagId])
 }
 
 model Tag {
@@ -36,7 +78,8 @@ model Tag {
   slug     String @unique
   category String @default("general")
 
-  patterns PatternTag[]
+  patterns    PatternTag[]
+  versionTags PatternVersionTag[]
 }
 
 model PatternTag {
