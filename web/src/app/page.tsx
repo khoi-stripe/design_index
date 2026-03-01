@@ -5,6 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
 import { clearBreadcrumbTrail } from "@/components/Breadcrumb";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 const CATEGORIES = [
   { value: null, label: "All" },
@@ -44,6 +47,7 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // undefined = "All time"
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
@@ -85,12 +89,14 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (activeCategory) params.set("category", activeCategory);
     if (search) params.set("search", search);
+    if (dateRange?.from) params.set("dateFrom", format(dateRange.from, "yyyy-MM-dd"));
+    if (dateRange?.to) params.set("dateTo", format(dateRange.to, "yyyy-MM-dd"));
 
     const res = await fetch(`/api/patterns?${params}`);
     const data = await res.json();
     setPatterns(data.patterns);
     setLoading(false);
-  }, [activeCategory, search]);
+  }, [activeCategory, search, dateRange]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchPatterns, search ? 300 : 0);
@@ -131,58 +137,71 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="bg-content-bg min-h-[calc(100vh-60px)] p-8">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="relative inline-block">
-              <button
-                onClick={toggleMenu}
-                className="flex items-center gap-2 py-1"
-              >
-                <span className="text-xs font-semibold text-muted tracking-tight">
-                  Showing: {activeCategoryLabel}
-                </span>
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M2 4h12M4 8h8M6 12h4"
-                    stroke="#667691"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-
-              {showFilterMenu && (
-              <div
-                ref={menuRef}
-                className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
-                  menuClosing ? "menu-spring-exit" : "menu-spring-enter"
-                }`}
-              >
-                {CATEGORIES.map((cat) => (
+      <main className="bg-content-bg min-h-[calc(100vh-60px)]">
+        {/* Inline Filter Bar */}
+        <div className="border-b border-border bg-background">
+          <div className="max-w-[1400px] mx-auto px-8 py-4">
+            <div className="flex items-center justify-between gap-4">
+              {/* Left: Category filter + count */}
+              <div className="flex items-center gap-1.5 flex-1">
+                <div className="relative inline-block">
                   <button
-                    key={cat.label}
-                    onClick={() => {
-                      setActiveCategory(cat.value);
-                      closeMenu();
-                    }}
-                    className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                      activeCategory === cat.value
-                        ? "bg-accent text-white font-medium"
-                        : "text-foreground hover:bg-surface-hover"
-                    }`}
+                    onClick={toggleMenu}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground transition-colors"
                   >
-                    {cat.label}
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M2 4h12M4 8h8M6 12h4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="font-semibold tracking-tight">
+                      Showing: {activeCategoryLabel}
+                    </span>
                   </button>
-                ))}
-              </div>
-            )}
-            </div>
-            <span className="text-xs text-muted">
-              {loading ? "..." : patterns.length}
-            </span>
-          </div>
 
+                  {showFilterMenu && (
+                    <div
+                      ref={menuRef}
+                      className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
+                        menuClosing ? "menu-spring-exit" : "menu-spring-enter"
+                      }`}
+                    >
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.label}
+                          onClick={() => {
+                            setActiveCategory(cat.value);
+                            closeMenu();
+                          }}
+                          className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
+                            activeCategory === cat.value
+                              ? "bg-accent text-white font-medium"
+                              : "text-foreground hover:bg-surface-hover"
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <span className="text-xs text-muted">
+                  {loading ? "..." : patterns.length}
+                </span>
+              </div>
+
+              {/* Right: Date range picker */}
+              <div className="flex items-center gap-1.5">
+                <DateRangePicker value={dateRange} onChange={setDateRange} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto p-8">
           <PatternGrid patterns={patterns} loading={loading} />
         </div>
       </main>

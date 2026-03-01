@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search");
   const status = searchParams.get("status") || "published";
   const featured = searchParams.get("featured");
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
   const limit = parseInt(searchParams.get("limit") || "50");
   const offset = parseInt(searchParams.get("offset") || "0");
 
@@ -29,6 +31,16 @@ export async function GET(request: NextRequest) {
     where.tags = {
       some: { tag: { slug: tag } },
     };
+  }
+
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) (where.createdAt as Record<string, unknown>).gte = new Date(dateFrom);
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setUTCHours(23, 59, 59, 999);
+      (where.createdAt as Record<string, unknown>).lte = to;
+    }
   }
 
   if (search) {

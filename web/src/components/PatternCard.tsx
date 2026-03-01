@@ -167,7 +167,7 @@ export function PatternCard({
                 </span>
               ))}
               {pattern.tags.length > 3 && (
-                <span className="px-2 py-[2px] text-[11px] text-muted">
+                <span className="px-2 py-[2px] text-[11px] text-muted shrink-0 whitespace-nowrap">
                   +{pattern.tags.length - 3}
                 </span>
               )}
