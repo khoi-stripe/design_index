@@ -17,6 +17,7 @@ model Pattern {
   figmaPageName String   @default("")
   screenshotUrl String   @default("")
   thumbnailUrl  String   @default("")
+  dominantColor String   @default("")
   authorName    String   @default("")
   authorAvatar  String   @default("")
   category      String   @default("pattern")

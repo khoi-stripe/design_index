@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
@@ -19,6 +19,7 @@ type Pattern = {
   description: string;
   screenshotUrl: string;
   thumbnailUrl: string;
+  dominantColor: string;
   authorName: string;
   authorAvatar: string;
   figmaDeepLink: string;
@@ -35,6 +36,32 @@ export default function HomePage() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [loading, setLoading] = useState(true);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuClosing, setMenuClosing] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const openMenu = () => {
+    setMenuVisible(true);
+    setMenuClosing(false);
+    setShowFilterMenu(true);
+  };
+
+  const closeMenu = () => {
+    setMenuClosing(true);
+    setTimeout(() => {
+      setShowFilterMenu(false);
+      setMenuVisible(false);
+      setMenuClosing(false);
+    }, 150);
+  };
+
+  const toggleMenu = () => {
+    if (showFilterMenu && !menuClosing) {
+      closeMenu();
+    } else if (!showFilterMenu) {
+      openMenu();
+    }
+  };
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
@@ -95,7 +122,7 @@ export default function HomePage() {
         <div className="max-w-[1400px] mx-auto">
           <div className="mb-6 relative">
             <button
-              onClick={() => setShowFilterMenu((v) => !v)}
+              onClick={toggleMenu}
               className="flex items-center gap-2 py-1"
             >
               <span className="text-xs font-semibold text-muted tracking-tight">
@@ -115,13 +142,18 @@ export default function HomePage() {
             </p>
 
             {showFilterMenu && (
-              <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg">
+              <div
+                ref={menuRef}
+                className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
+                  menuClosing ? "menu-spring-exit" : "menu-spring-enter"
+                }`}
+              >
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat.label}
                     onClick={() => {
                       setActiveCategory(cat.value);
-                      setShowFilterMenu(false);
+                      closeMenu();
                     }}
                     className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
                       activeCategory === cat.value

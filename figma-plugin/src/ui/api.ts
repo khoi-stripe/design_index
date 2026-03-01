@@ -2,7 +2,7 @@ const API_BASE = "http://localhost:3000/api";
 
 export async function uploadScreenshot(
   bytes: Uint8Array
-): Promise<{ url: string; thumbnailUrl: string }> {
+): Promise<{ url: string; thumbnailUrl: string; dominantColor: string }> {
   const blob = new Blob([bytes], { type: "image/png" });
   const formData = new FormData();
   formData.append("file", blob, "screenshot.png");
@@ -14,7 +14,7 @@ export async function uploadScreenshot(
 
   if (!res.ok) throw new Error("Upload failed");
   const data = await res.json();
-  return { url: data.url, thumbnailUrl: data.thumbnailUrl };
+  return { url: data.url, thumbnailUrl: data.thumbnailUrl, dominantColor: data.dominantColor || "" };
 }
 
 export async function createPattern(data: {
@@ -26,6 +26,7 @@ export async function createPattern(data: {
   figmaPageName: string;
   screenshotUrl: string;
   thumbnailUrl: string;
+  dominantColor: string;
   authorName: string;
   authorAvatar: string;
   tags: string[];

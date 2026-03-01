@@ -43,3 +43,39 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
+
+@keyframes menu-spring-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.007);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes menu-spring-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.menu-spring-enter {
+  animation: menu-spring-in 0.2s ease-out forwards;
+  transform-origin: top left;
+}
+
+.menu-spring-exit {
+  animation: menu-spring-out 0.12s ease-in forwards;
+  transform-origin: top left;
+}

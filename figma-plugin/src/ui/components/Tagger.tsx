@@ -88,7 +88,7 @@ export function Tagger({
     setErrorMsg("");
 
     try {
-      const upload = await new Promise<{ url: string; thumbnailUrl: string }>(
+      const upload = await new Promise<{ url: string; thumbnailUrl: string; dominantColor: string }>(
         (resolve, reject) => {
           const handler = (event: MessageEvent) => {
             const msg = event.data.pluginMessage;
@@ -122,6 +122,7 @@ export function Tagger({
         figmaPageName: selection.pageName,
         screenshotUrl: upload.url,
         thumbnailUrl: upload.thumbnailUrl,
+        dominantColor: upload.dominantColor,
         authorName: user?.name || "",
         authorAvatar: user?.photoUrl || "",
         tags: selectedTags,

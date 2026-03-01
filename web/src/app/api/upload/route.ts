@@ -27,27 +27,26 @@ export async function POST(request: NextRequest) {
 
   await writeFile(path.join(uploadDir, filename), buffer);
 
-  const meta = await sharp(buffer).metadata();
-  const w = meta.width || THUMB_SIZE;
-  const h = meta.height || THUMB_SIZE;
-  const side = Math.min(w, h);
-
   const thumbBuffer = await sharp(buffer)
-    .extract({
-      left: Math.floor((w - side) / 2),
-      top: 0,
-      width: side,
-      height: side,
+    .resize({
+      width: THUMB_SIZE,
+      height: THUMB_SIZE,
+      fit: "inside",
+      withoutEnlargement: true,
     })
-    .resize(THUMB_SIZE, THUMB_SIZE)
     .png({ quality: 85 })
     .toBuffer();
 
   await writeFile(path.join(uploadDir, thumbFilename), thumbBuffer);
 
+  const { dominant } = await sharp(thumbBuffer).stats();
+  const r = dominant.r, g = dominant.g, b = dominant.b;
+  const dominantColor = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+
   return NextResponse.json({
     url: `/uploads/${filename}`,
     thumbnailUrl: `/uploads/${thumbFilename}`,
+    dominantColor,
     filename,
   });
 }

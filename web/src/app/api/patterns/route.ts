@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, authorName, authorAvatar, tags, category } = body;
+  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, dominantColor, authorName, authorAvatar, tags, category } = body;
 
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       title,
       description: description || "",
       category: category || "pattern",
+      dominantColor: dominantColor || "",
       figmaFileKey: figmaFileKey || "",
       figmaNodeId: figmaNodeId || "",
       figmaDeepLink,

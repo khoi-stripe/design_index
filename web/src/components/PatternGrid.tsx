@@ -8,6 +8,7 @@ type Pattern = {
   description: string;
   screenshotUrl: string;
   thumbnailUrl: string;
+  dominantColor: string;
   authorName: string;
   authorAvatar: string;
   figmaDeepLink: string;
@@ -60,8 +61,8 @@ export function PatternGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {patterns.map((pattern) => (
-        <PatternCard key={pattern.id} pattern={pattern} />
+      {patterns.map((pattern, i) => (
+        <PatternCard key={pattern.id} pattern={pattern} index={i} priority={i < 3} />
       ))}
     </div>
   );
