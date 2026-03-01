@@ -294,7 +294,7 @@ export default function PatternDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-8 h-[60px] flex items-center justify-between">
           <Breadcrumb currentId={pattern.id} currentTitle={pattern.title} />
           <div className="flex items-center gap-2">
             {!editing && (

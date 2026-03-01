@@ -84,9 +84,9 @@ export function Breadcrumb({
     <nav className="flex items-center gap-1.5 text-sm min-w-0">
       <button
         onClick={handleRootClick}
-        className="flex items-center gap-1.5 text-muted hover:text-foreground transition-colors shrink-0"
+        className="flex items-center gap-2 text-muted hover:text-foreground transition-colors shrink-0"
       >
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path
             fillRule="evenodd"
             clipRule="evenodd"
@@ -94,7 +94,7 @@ export function Breadcrumb({
             fill="currentColor"
           />
         </svg>
-        <span className="text-xs font-semibold">Design.Index</span>
+        <span className="text-xs font-semibold tracking-tight">Design.Index</span>
       </button>
 
       {visiblePrevious.map((item, i) => (

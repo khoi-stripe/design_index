@@ -52,7 +52,7 @@ export default function HomePage() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [filterSticky, setFilterSticky] = useState(false);
+  const [filterSticky, setFilterSticky] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
@@ -150,32 +150,34 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background h-[60px] flex items-center px-6 relative">
-        <a
-          href="/"
-          className="flex items-center gap-2.5 shrink-0"
-          onClick={(e) => {
-            e.preventDefault();
-            setSearch("");
-            setActiveCategory(null);
-            window.history.pushState({}, "", "/");
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M0 12L12 9.45516V0L0 2.57459V12Z"
-              fill="white"
-            />
-          </svg>
-          <span className="text-xs font-semibold text-foreground tracking-tight">
-            Design.Index
-          </span>
-        </a>
+      <header className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="max-w-[1400px] mx-auto px-8 h-[60px] flex items-center relative">
+          <a
+            href="/"
+            className="flex items-center gap-2 shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              setSearch("");
+              setActiveCategory(null);
+              window.history.pushState({}, "", "/");
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M0 12L12 9.45516V0L0 2.57459V12Z"
+                fill="white"
+              />
+            </svg>
+            <span className="text-xs font-semibold text-foreground tracking-tight">
+              Design.Index
+            </span>
+          </a>
 
-        <div className="absolute left-1/2 -translate-x-1/2 top-3">
-          <SearchBar value={search} onChange={setSearch} />
+          <div className="absolute left-1/2 -translate-x-1/2 top-3">
+            <SearchBar value={search} onChange={setSearch} />
+          </div>
         </div>
       </header>
 
