@@ -17,6 +17,12 @@ type UserData = {
   photoUrl: string;
 };
 
+const CATEGORIES = [
+  { value: "screen", label: "Screen", desc: "Whole page or surface" },
+  { value: "pattern", label: "Pattern", desc: "Assemblage of components" },
+  { value: "component", label: "Component", desc: "Individual UI piece" },
+] as const;
+
 const SUGGESTED_TAGS = [
   "onboarding", "modal", "dashboard", "form", "checkout",
   "pricing", "settings", "navigation", "empty-state",
@@ -34,6 +40,7 @@ export function Tagger({
 }) {
   const [title, setTitle] = useState(selection.existingMeta?.title || selection.name);
   const [description, setDescription] = useState(selection.existingMeta?.description || "");
+  const [category, setCategory] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>(selection.existingTags || []);
   const [customTag, setCustomTag] = useState("");
   const [allTags, setAllTags] = useState<{ slug: string; name: string }[]>([]);
@@ -68,6 +75,10 @@ export function Tagger({
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) return;
+    if (!category) {
+      setErrorMsg("Choose a category");
+      return;
+    }
     if (selectedTags.length === 0) {
       setErrorMsg("Add at least one tag");
       return;
@@ -77,35 +88,40 @@ export function Tagger({
     setErrorMsg("");
 
     try {
-      const screenshotUrl = await new Promise<string>((resolve, reject) => {
-        const handler = (event: MessageEvent) => {
-          const msg = event.data.pluginMessage;
-          if (!msg) return;
-          if (msg.type === "screenshot") {
-            window.removeEventListener("message", handler);
-            uploadScreenshot(msg.data)
-              .then(resolve)
-              .catch(reject);
-            setStatus("uploading");
-          }
-          if (msg.type === "screenshot-error") {
-            window.removeEventListener("message", handler);
-            reject(new Error(msg.error));
-          }
-        };
-        window.addEventListener("message", handler);
-        parent.postMessage({ pluginMessage: { type: "capture-screenshot" } }, "*");
-      });
+      const upload = await new Promise<{ url: string; thumbnailUrl: string }>(
+        (resolve, reject) => {
+          const handler = (event: MessageEvent) => {
+            const msg = event.data.pluginMessage;
+            if (!msg) return;
+            if (msg.type === "screenshot") {
+              window.removeEventListener("message", handler);
+              setStatus("uploading");
+              uploadScreenshot(msg.data).then(resolve).catch(reject);
+            }
+            if (msg.type === "screenshot-error") {
+              window.removeEventListener("message", handler);
+              reject(new Error(msg.error));
+            }
+          };
+          window.addEventListener("message", handler);
+          parent.postMessage(
+            { pluginMessage: { type: "capture-screenshot" } },
+            "*"
+          );
+        }
+      );
 
       setStatus("saving");
 
       await createPattern({
         title: title.trim(),
         description: description.trim(),
+        category,
         figmaFileKey: fileKey,
         figmaNodeId: selection.id,
         figmaPageName: selection.pageName,
-        screenshotUrl,
+        screenshotUrl: upload.url,
+        thumbnailUrl: upload.thumbnailUrl,
         authorName: user?.name || "",
         authorAvatar: user?.photoUrl || "",
         tags: selectedTags,
@@ -125,7 +141,7 @@ export function Tagger({
       setStatus("error");
       setErrorMsg(e instanceof Error ? e.message : "Something went wrong");
     }
-  }, [title, description, selectedTags, fileKey, selection, user]);
+  }, [title, description, category, selectedTags, fileKey, selection, user]);
 
   const suggestedToShow = SUGGESTED_TAGS.filter(
     (t) => !selectedTags.includes(t)
@@ -170,6 +186,22 @@ export function Tagger({
           placeholder="What is this pattern? When is it used?"
           rows={2}
         />
+      </div>
+
+      <div className="field">
+        <label className="label">Category</label>
+        <div className="category-selector">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => { setCategory(cat.value); setErrorMsg(""); }}
+              className={`category-option ${category === cat.value ? "active" : ""}`}
+            >
+              <span className="category-label">{cat.label}</span>
+              <span className="category-desc">{cat.desc}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="field">

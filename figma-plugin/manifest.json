@@ -5,6 +5,7 @@
   "main": "dist/main.js",
   "ui": "dist/index.html",
   "editorType": ["figma"],
+  "permissions": ["currentuser", "filekey"],
   "networkAccess": {
     "allowedDomains": ["http://localhost:3000", "http://localhost:3001"],
     "reasoning": "Syncs tagged patterns with the Index pattern library backend"

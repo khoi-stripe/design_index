@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const tag = searchParams.get("tag");
+  const category = searchParams.get("category");
   const search = searchParams.get("search");
   const status = searchParams.get("status") || "published";
   const featured = searchParams.get("featured");
@@ -20,6 +21,10 @@ export async function GET(request: NextRequest) {
     where.featured = true;
   }
 
+  if (category) {
+    where.category = category;
+  }
+
   if (tag) {
     where.tags = {
       some: { tag: { slug: tag } },
@@ -30,6 +35,7 @@ export async function GET(request: NextRequest) {
     where.OR = [
       { title: { contains: search } },
       { description: { contains: search } },
+      { authorName: { contains: search } },
       { tags: { some: { tag: { name: { contains: search } } } } },
     ];
   }
@@ -52,7 +58,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, authorName, authorAvatar, tags } = body;
+  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, authorName, authorAvatar, tags, category } = body;
 
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -60,13 +66,14 @@ export async function POST(request: NextRequest) {
 
   const figmaDeepLink =
     figmaFileKey && figmaNodeId
-      ? `https://figma.com/file/${figmaFileKey}?node-id=${figmaNodeId}`
+      ? `https://www.figma.com/design/${figmaFileKey}?node-id=${encodeURIComponent(figmaNodeId)}`
       : "";
 
   const pattern = await prisma.pattern.create({
     data: {
       title,
       description: description || "",
+      category: category || "pattern",
       figmaFileKey: figmaFileKey || "",
       figmaNodeId: figmaNodeId || "",
       figmaDeepLink,

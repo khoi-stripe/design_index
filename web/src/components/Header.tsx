@@ -35,14 +35,6 @@ export function Header({
 
         <SearchBar value={search} onChange={onSearchChange} />
 
-        <nav className="flex items-center gap-1 shrink-0">
-          <Link
-            href="/"
-            className="px-3 py-1.5 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-hover transition-colors"
-          >
-            Browse
-          </Link>
-        </nav>
       </div>
     </header>
   );

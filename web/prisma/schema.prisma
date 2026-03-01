@@ -19,6 +19,7 @@ model Pattern {
   thumbnailUrl  String   @default("")
   authorName    String   @default("")
   authorAvatar  String   @default("")
+  category      String   @default("pattern")
   status        String   @default("published")
   featured      Boolean  @default(false)
   createdAt     DateTime @default(now())

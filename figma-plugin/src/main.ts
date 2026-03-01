@@ -1,5 +1,19 @@
 figma.showUI(__html__, { width: 360, height: 520, themeColors: true });
 
+function getFileKey(): string {
+  if (figma.fileKey) return figma.fileKey;
+  const stored = figma.root.getPluginData("fileKey");
+  if (stored) return stored;
+  return "";
+}
+
+function sendFileKey() {
+  figma.ui.postMessage({
+    type: "file-key",
+    data: getFileKey(),
+  });
+}
+
 function sendSelection() {
   const selection = figma.currentPage.selection;
   if (selection.length === 0) {
@@ -26,7 +40,10 @@ function sendSelection() {
   });
 }
 
-figma.on("selectionchange", sendSelection);
+figma.on("selectionchange", () => {
+  sendSelection();
+  sendFileKey();
+});
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === "get-selection") {
@@ -83,10 +100,12 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "get-file-key") {
-    figma.ui.postMessage({
-      type: "file-key",
-      data: figma.fileKey,
-    });
+    sendFileKey();
+  }
+
+  if (msg.type === "set-file-key") {
+    figma.root.setPluginData("fileKey", msg.data);
+    sendFileKey();
   }
 
   if (msg.type === "get-user") {

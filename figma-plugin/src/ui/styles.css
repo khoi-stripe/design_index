@@ -62,6 +62,48 @@ body {
   max-width: 200px;
 }
 
+.file-key-prompt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  gap: 8px;
+}
+
+.file-key-prompt-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f0eeff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.file-key-prompt-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1a1a2e;
+}
+
+.file-key-prompt-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  max-width: 260px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.file-key-input-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
 .tagger {
   padding: 16px;
   display: flex;
@@ -233,6 +275,52 @@ body {
 
 .tag.active:hover {
   background: #5248e0;
+}
+
+.category-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.category-option {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.category-option:hover {
+  border-color: #635bff;
+  background: #f6f5ff;
+}
+
+.category-option.active {
+  border-color: #635bff;
+  background: #f0eeff;
+  box-shadow: 0 0 0 1px #635bff;
+}
+
+.category-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.category-desc {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.category-option.active .category-label {
+  color: #635bff;
 }
 
 .error {

@@ -3,13 +3,31 @@ import { prisma } from "@/lib/db";
 
 export async function GET() {
   const tags = await prisma.tag.findMany({
+    where: {
+      patterns: { some: {} },
+    },
     include: {
       _count: { select: { patterns: true } },
+      patterns: {
+        select: { pattern: { select: { createdAt: true } } },
+        orderBy: { pattern: { createdAt: "desc" } },
+        take: 1,
+      },
     },
-    orderBy: { name: "asc" },
   });
 
-  return NextResponse.json(tags);
+  const sorted = tags
+    .map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      slug: tag.slug,
+      category: tag.category,
+      _count: tag._count,
+      latestAt: tag.patterns[0]?.pattern.createdAt ?? new Date(0),
+    }))
+    .sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
+
+  return NextResponse.json(sorted);
 }
 
 export async function POST(request: NextRequest) {

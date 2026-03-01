@@ -25,12 +25,12 @@ export function PatternGrid({
 }) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="animate-pulse">
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="aspect-[4/3] bg-surface" />
-              <div className="p-3.5 space-y-2">
+            <div className="rounded-[6px] overflow-hidden">
+              <div className="aspect-square bg-surface" />
+              <div className="bg-black p-4 space-y-2">
                 <div className="h-4 bg-surface rounded w-3/4" />
                 <div className="flex gap-1">
                   <div className="h-5 bg-surface rounded w-16" />
@@ -52,14 +52,14 @@ export function PatternGrid({
             <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <p className="text-sm font-medium text-foreground mb-1">No patterns found</p>
+        <p className="text-sm font-medium text-foreground-bright mb-1">No patterns found</p>
         <p className="text-sm text-muted">Try adjusting your search or filters</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {patterns.map((pattern) => (
         <PatternCard key={pattern.id} pattern={pattern} />
       ))}

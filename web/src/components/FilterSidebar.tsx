@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 type TagWithCount = {
   id: string;
   name: string;
@@ -17,60 +19,50 @@ export function FilterSidebar({
   activeTag: string | null;
   onTagChange: (slug: string | null) => void;
 }) {
-  const grouped = tags.reduce<Record<string, TagWithCount[]>>((acc, tag) => {
-    const cat = tag.category || "general";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(tag);
-    return acc;
-  }, {});
-
-  const categoryOrder = ["pattern", "component", "page", "general"];
-  const sortedCategories = Object.keys(grouped).sort(
-    (a, b) => (categoryOrder.indexOf(a) ?? 99) - (categoryOrder.indexOf(b) ?? 99)
-  );
-
   return (
-    <aside className="w-56 shrink-0 pr-6 border-r border-border">
-      <div className="sticky top-20">
-        <button
-          onClick={() => onTagChange(null)}
-          className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors mb-1 ${
-            activeTag === null
-              ? "bg-accent text-white font-medium"
-              : "text-muted hover:text-foreground hover:bg-surface-hover"
-          }`}
-        >
-          All patterns
-        </button>
+    <aside className="w-52 shrink-0 border-r border-border h-screen overflow-y-auto p-4 space-y-4">
+      <Link href="/" className="flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="text-white"
+          >
+            <rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor" />
+            <rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor" opacity="0.6" />
+            <rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor" opacity="0.6" />
+            <rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor" opacity="0.3" />
+          </svg>
+        </div>
+        <span className="font-semibold text-[15px] text-foreground">
+          Index
+        </span>
+      </Link>
 
-        {sortedCategories.map((category) => (
-          <div key={category} className="mt-4">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 px-3 mb-1.5">
-              {category}
-            </h3>
-            {grouped[category].map((tag) => (
-              <button
-                key={tag.id}
-                onClick={() =>
-                  onTagChange(activeTag === tag.slug ? null : tag.slug)
-                }
-                className={`w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors flex items-center justify-between ${
-                  activeTag === tag.slug
-                    ? "bg-accent text-white font-medium"
-                    : "text-muted hover:text-foreground hover:bg-surface-hover"
-                }`}
-              >
-                <span>{tag.name}</span>
-                <span
-                  className={`text-xs ${
-                    activeTag === tag.slug ? "text-white/70" : "text-muted/40"
-                  }`}
-                >
-                  {tag._count.patterns}
-                </span>
-              </button>
-            ))}
-          </div>
+      <div className="space-y-0.5">
+        {tags.map((tag) => (
+          <button
+            key={tag.id}
+            onClick={() =>
+              onTagChange(activeTag === tag.slug ? null : tag.slug)
+            }
+            className={`w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors flex items-center justify-between ${
+              activeTag === tag.slug
+                ? "bg-accent text-white font-medium"
+                : "text-muted hover:text-foreground hover:bg-surface-hover"
+            }`}
+          >
+            <span>{tag.name}</span>
+            <span
+              className={`text-xs ${
+                activeTag === tag.slug ? "text-white/70" : "text-muted/40"
+              }`}
+            >
+              {tag._count.patterns}
+            </span>
+          </button>
         ))}
       </div>
     </aside>

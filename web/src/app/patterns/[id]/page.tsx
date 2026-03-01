@@ -11,6 +11,7 @@ type PatternDetail = {
   id: string;
   title: string;
   description: string;
+  category: string;
   screenshotUrl: string;
   figmaDeepLink: string;
   figmaPageName: string;
@@ -151,6 +152,17 @@ export default function PatternDetailPage() {
             )}
 
             <div className="space-y-4">
+              {pattern.category && (
+                <div>
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">
+                    Category
+                  </h3>
+                  <span className="inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-md capitalize">
+                    {pattern.category}
+                  </span>
+                </div>
+              )}
+
               {pattern.tags.length > 0 && (
                 <div>
                   <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">
@@ -160,8 +172,8 @@ export default function PatternDetailPage() {
                     {pattern.tags.map(({ tag }) => (
                       <Link
                         key={tag.id}
-                        href={`/?tag=${tag.slug}`}
-                        className="px-2.5 py-1 text-xs bg-tag-bg text-tag-text rounded-md hover:bg-accent hover:text-white transition-colors"
+                        href={`/?search=${encodeURIComponent(tag.name)}`}
+                        className="px-2.5 py-1 text-xs bg-accent text-white rounded-md hover:bg-accent-light transition-colors"
                       >
                         {tag.name}
                       </Link>

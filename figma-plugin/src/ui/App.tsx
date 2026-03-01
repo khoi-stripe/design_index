@@ -18,10 +18,19 @@ type UserData = {
   photoUrl: string;
 };
 
+function extractFileKey(url: string): string | null {
+  const match = url.match(
+    /figma\.com\/(?:design|file|proto)\/([a-zA-Z0-9]+)/
+  );
+  return match ? match[1] : null;
+}
+
 export default function App() {
   const [selection, setSelection] = useState<SelectionData | null>(null);
   const [fileKey, setFileKey] = useState<string>("");
   const [user, setUser] = useState<UserData | null>(null);
+  const [fileUrlInput, setFileUrlInput] = useState("");
+  const [fileKeyError, setFileKeyError] = useState("");
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -47,6 +56,21 @@ export default function App() {
 
     return () => window.removeEventListener("message", handler);
   }, []);
+
+  const handleFileUrl = () => {
+    const key = extractFileKey(fileUrlInput.trim());
+    if (!key) {
+      setFileKeyError("Paste a valid Figma file URL");
+      return;
+    }
+    setFileKeyError("");
+    parent.postMessage(
+      { pluginMessage: { type: "set-file-key", data: key } },
+      "*"
+    );
+  };
+
+  const showFileKeyPrompt = !fileKey && selection;
 
   return (
     <div className="app">
@@ -74,6 +98,34 @@ export default function App() {
           <p className="empty-desc">
             Select a frame or component to tag it as a pattern
           </p>
+        </div>
+      ) : showFileKeyPrompt ? (
+        <div className="file-key-prompt">
+          <div className="file-key-prompt-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#635BFF" strokeWidth="1.5">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+          </div>
+          <p className="file-key-prompt-title">Link this file</p>
+          <p className="file-key-prompt-desc">
+            Paste this file's Figma URL so patterns link back to the source.
+            You only need to do this once per file.
+          </p>
+          <div className="file-key-input-row">
+            <input
+              type="text"
+              value={fileUrlInput}
+              onChange={(e) => { setFileUrlInput(e.target.value); setFileKeyError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && handleFileUrl()}
+              className="input"
+              placeholder="https://figma.com/design/..."
+            />
+            <button onClick={handleFileUrl} className="btn-small">
+              Save
+            </button>
+          </div>
+          {fileKeyError && <div className="error">{fileKeyError}</div>}
         </div>
       ) : (
         <Tagger

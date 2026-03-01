@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Header } from "@/components/Header";
-import { FilterSidebar } from "@/components/FilterSidebar";
+import { useSearchParams } from "next/navigation";
+import { SearchBar } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
 
-type Tag = {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  _count: { patterns: number };
-};
+const CATEGORIES = [
+  { value: null, label: "All" },
+  { value: "screen", label: "Screens" },
+  { value: "pattern", label: "Patterns" },
+  { value: "component", label: "Components" },
+] as const;
 
 type PatternTag = { tag: { id: string; name: string; slug: string } };
 type Pattern = {
@@ -25,66 +24,121 @@ type Pattern = {
   figmaDeepLink: string;
   featured: boolean;
   createdAt: string;
+  category: string;
   tags: PatternTag[];
 };
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
   const [patterns, setPatterns] = useState<Pattern[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [loading, setLoading] = useState(true);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+  useEffect(() => {
+    setSearch(searchParams.get("search") || "");
+  }, [searchParams]);
 
   const fetchPatterns = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (activeTag) params.set("tag", activeTag);
+    if (activeCategory) params.set("category", activeCategory);
     if (search) params.set("search", search);
 
     const res = await fetch(`/api/patterns?${params}`);
     const data = await res.json();
     setPatterns(data.patterns);
     setLoading(false);
-  }, [activeTag, search]);
-
-  useEffect(() => {
-    fetch("/api/tags")
-      .then((r) => r.json())
-      .then(setTags);
-  }, []);
+  }, [activeCategory, search]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchPatterns, search ? 300 : 0);
     return () => clearTimeout(timeout);
   }, [fetchPatterns, search]);
 
+  const activeCategoryLabel =
+    CATEGORIES.find((c) => c.value === activeCategory)?.label || "All";
+
   return (
     <div className="min-h-screen bg-background">
-      <Header search={search} onSearchChange={setSearch} />
-      <div className="max-w-[1400px] mx-auto px-6 py-8">
-        <div className="flex gap-8">
-          <FilterSidebar
-            tags={tags}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-          <main className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">
-                  {activeTag
-                    ? tags.find((t) => t.slug === activeTag)?.name || "Patterns"
-                    : "All patterns"}
-                </h1>
-                <p className="text-sm text-muted mt-0.5">
-                  {loading ? "Loading..." : `${patterns.length} patterns`}
-                </p>
-              </div>
-            </div>
-            <PatternGrid patterns={patterns} loading={loading} />
-          </main>
+      <header className="sticky top-0 z-50 bg-background h-[60px] flex items-center px-6 relative">
+        <a
+          href="/"
+          className="flex items-center gap-2.5 shrink-0"
+          onClick={(e) => {
+            e.preventDefault();
+            setSearch("");
+            setActiveCategory(null);
+            window.history.pushState({}, "", "/");
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M0 12L12 9.45516V0L0 2.57459V12Z"
+              fill="white"
+            />
+          </svg>
+          <span className="text-xs font-semibold text-foreground tracking-tight">
+            Design.Index
+          </span>
+        </a>
+
+        <div className="absolute left-1/2 -translate-x-1/2 top-3">
+          <SearchBar value={search} onChange={setSearch} />
         </div>
-      </div>
+      </header>
+
+      <main className="bg-content-bg min-h-[calc(100vh-60px)] p-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="mb-6 relative">
+            <button
+              onClick={() => setShowFilterMenu((v) => !v)}
+              className="flex items-center gap-2 py-1"
+            >
+              <span className="text-xs font-semibold text-muted tracking-tight">
+                Showing: {activeCategoryLabel}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M2 4h12M4 8h8M6 12h4"
+                  stroke="#667691"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+            <p className="text-xs text-foreground">
+              {loading ? "..." : patterns.length}
+            </p>
+
+            {showFilterMenu && (
+              <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.label}
+                    onClick={() => {
+                      setActiveCategory(cat.value);
+                      setShowFilterMenu(false);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
+                      activeCategory === cat.value
+                        ? "bg-accent text-white font-medium"
+                        : "text-foreground hover:bg-surface-hover"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <PatternGrid patterns={patterns} loading={loading} />
+        </div>
+      </main>
     </div>
   );
 }

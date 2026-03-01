@@ -1,6 +1,8 @@
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = "http://localhost:3000/api";
 
-export async function uploadScreenshot(bytes: Uint8Array): Promise<string> {
+export async function uploadScreenshot(
+  bytes: Uint8Array
+): Promise<{ url: string; thumbnailUrl: string }> {
   const blob = new Blob([bytes], { type: "image/png" });
   const formData = new FormData();
   formData.append("file", blob, "screenshot.png");
@@ -12,16 +14,18 @@ export async function uploadScreenshot(bytes: Uint8Array): Promise<string> {
 
   if (!res.ok) throw new Error("Upload failed");
   const data = await res.json();
-  return data.url;
+  return { url: data.url, thumbnailUrl: data.thumbnailUrl };
 }
 
 export async function createPattern(data: {
   title: string;
   description: string;
+  category: string;
   figmaFileKey: string;
   figmaNodeId: string;
   figmaPageName: string;
   screenshotUrl: string;
+  thumbnailUrl: string;
   authorName: string;
   authorAvatar: string;
   tags: string[];
