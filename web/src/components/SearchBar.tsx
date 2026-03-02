@@ -110,7 +110,7 @@ export function SearchBar({
         onFocus={() => suggestions.length > 0 && setOpen(true)}
         onKeyDown={handleKeyDown}
         placeholder="Search patterns, tags, contributors..."
-        className="w-full h-9 pl-9 pr-9 text-sm bg-white/5 text-foreground rounded-lg outline-none focus:bg-white/10 transition-all placeholder:text-muted/60"
+        className="w-full h-9 pl-9 pr-9 text-sm bg-surface text-foreground rounded-lg outline-none focus:bg-surface-hover transition-all placeholder:text-muted/60"
       />
       {value && (
         <button
