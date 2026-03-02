@@ -25,6 +25,9 @@ export function ModeChooser({
         <span className="mode-label">Update existing</span>
         <span className="mode-desc">Add a new version to an existing pattern</span>
       </button>
+      <p className="mode-hint">
+        Select multiple frames to add them as a flow. Images are captured left to right. You can reorder them later on the detail page.
+      </p>
     </div>
   );
 }

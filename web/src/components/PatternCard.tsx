@@ -149,7 +149,7 @@ export function PatternCard({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    router.push(`/?search=${encodeURIComponent(tag.name)}`);
+                    router.push(`/?tag=${encodeURIComponent(tag.slug)}`);
                   }}
                   className="px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[2px] hover:bg-accent-light transition-colors cursor-pointer"
                 >

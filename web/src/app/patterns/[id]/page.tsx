@@ -7,6 +7,23 @@ import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { slugify } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Tag = { id: string; name: string; slug: string };
 type PatternVersion = {
@@ -67,6 +84,50 @@ type RelatedPattern = {
   tags: { tag: Tag }[];
 };
 
+type OrderableImage = {
+  id: string;
+  url: string;
+  label: string;
+  dominantColor: string;
+};
+
+function SortableThumbnail({
+  image,
+  isActive,
+  onClick,
+}: {
+  image: OrderableImage;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: image.id,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={`shrink-0 w-16 h-16 rounded-lg border overflow-hidden transition-all cursor-grab active:cursor-grabbing ${
+        isActive
+          ? "border-accent ring-1 ring-accent"
+          : "border-border opacity-60 hover:opacity-100"
+      }`}
+    >
+      <Image src={image.url} alt={image.label} width={64} height={64} className="w-full h-full object-cover" />
+    </button>
+  );
+}
+
 const CATEGORIES = [
   { value: "flow", label: "Flow" },
   { value: "screen", label: "Screen" },
@@ -110,6 +171,12 @@ export default function PatternDetailPage() {
   const [addingVersion, setAddingVersion] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [editImageOrder, setEditImageOrder] = useState<OrderableImage[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const fetchPattern = useCallback(() => {
     fetch(`/api/patterns/${id}`)
@@ -138,10 +205,11 @@ export default function PatternDetailPage() {
   const displayFigmaUrl = activeVersion?.figmaUrl || pattern?.figmaDeepLink || "";
   const displayTags = activeVersion?.tags?.length ? activeVersion.tags : pattern?.tags || [];
 
-  const allImages = useMemo(() => {
-    const imgs: { url: string; label: string; dominantColor: string }[] = [];
+  const allImagesWithIds = useMemo(() => {
+    const imgs: OrderableImage[] = [];
     if (displayScreenshot) {
       imgs.push({
+        id: "primary",
         url: displayScreenshot,
         label: "Primary",
         dominantColor: activeVersion?.dominantColor || pattern?.dominantColor || "",
@@ -150,6 +218,7 @@ export default function PatternDetailPage() {
     if (pattern?.images?.length) {
       for (const img of pattern.images) {
         imgs.push({
+          id: img.id,
           url: img.screenshotUrl,
           label: img.label || img.nodeName || `Image ${img.sortOrder + 1}`,
           dominantColor: img.dominantColor || "",
@@ -158,6 +227,8 @@ export default function PatternDetailPage() {
     }
     return imgs;
   }, [displayScreenshot, pattern, activeVersion]);
+
+  const allImages = editing && editImageOrder.length > 0 ? editImageOrder : allImagesWithIds;
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -180,15 +251,29 @@ export default function PatternDetailPage() {
     setEditDescription(pattern.description);
     setEditCategory(pattern.category);
     setEditTags(pattern.tags.map(({ tag }) => tag.slug));
+    setEditImageOrder([...allImagesWithIds]);
     setEditing(true);
   };
 
-  const cancelEditing = () => setEditing(false);
+  const cancelEditing = () => {
+    setEditImageOrder([]);
+    setEditing(false);
+  };
 
   const saveChanges = async () => {
     if (!pattern) return;
     setSaving(true);
     try {
+      const orderChanged =
+        editImageOrder.length > 0 &&
+        editImageOrder.some((img, i) => img.id !== allImagesWithIds[i]?.id);
+      if (orderChanged) {
+        await fetch(`/api/patterns/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageOrder: editImageOrder.map((img) => img.id) }),
+        });
+      }
       await fetch(`/api/patterns/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -199,6 +284,7 @@ export default function PatternDetailPage() {
           tags: editTags,
         }),
       });
+      setEditImageOrder([]);
       setEditing(false);
       fetchPattern();
     } finally {
@@ -210,8 +296,7 @@ export default function PatternDetailPage() {
     setDeleting(true);
     try {
       await fetch(`/api/patterns/${id}`, { method: "DELETE" });
-      router.refresh();
-      router.push("/");
+      window.location.href = "/";
     } finally {
       setDeleting(false);
     }
@@ -261,6 +346,16 @@ export default function PatternDetailPage() {
     const slug = slugify(newVersionTag);
     if (slug && !versionTags.includes(slug)) setVersionTags((prev) => [...prev, slug]);
     setNewVersionTag("");
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setEditImageOrder((items) => {
+      const oldIndex = items.findIndex((img) => img.id === active.id);
+      const newIndex = items.findIndex((img) => img.id === over.id);
+      return arrayMove(items, oldIndex, newIndex);
+    });
   };
 
   if (loading) {
@@ -402,27 +497,45 @@ export default function PatternDetailPage() {
             </div>
 
             {allImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {allImages.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImageIndex(i)}
-                    className={`shrink-0 w-16 h-16 rounded-lg border overflow-hidden transition-all ${
-                      i === activeImageIndex
-                        ? "border-accent ring-1 ring-accent"
-                        : "border-border opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={img.url}
-                      alt={img.label}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
+              editing ? (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={editImageOrder.map((img) => img.id)} strategy={horizontalListSortingStrategy}>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {editImageOrder.map((img, i) => (
+                        <SortableThumbnail
+                          key={img.id}
+                          image={img}
+                          isActive={i === activeImageIndex}
+                          onClick={() => setActiveImageIndex(i)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                  <p className="text-[11px] text-muted mt-1.5">Drag to reorder components</p>
+                </DndContext>
+              ) : (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {allImages.map((img, i) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setActiveImageIndex(i)}
+                      className={`shrink-0 w-16 h-16 rounded-lg border overflow-hidden transition-all ${
+                        i === activeImageIndex
+                          ? "border-accent ring-1 ring-accent"
+                          : "border-border opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.label}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )
             )}
           </div>
 
@@ -748,7 +861,7 @@ export default function PatternDetailPage() {
                         {displayTags.map(({ tag }) => (
                           <Link
                             key={tag.id}
-                            href={`/?search=${encodeURIComponent(tag.name)}`}
+                            href={`/?tag=${encodeURIComponent(tag.slug)}`}
                             className="px-2.5 py-1 text-xs bg-accent text-white rounded-[2px] hover:bg-accent-light transition-colors"
                           >
                             {tag.name}

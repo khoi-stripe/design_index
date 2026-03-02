@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { SearchBar } from "@/components/SearchBar";
+import { SearchBar, type SearchFilter } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
 import { clearBreadcrumbTrail } from "@/components/Breadcrumb";
 import { DateRangePicker } from "@/components/DateRangePicker";
@@ -46,6 +46,12 @@ export default function HomePage() {
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [filters, setFilters] = useState<SearchFilter[]>(() => {
+    const tagParam = searchParams.get("tag");
+    if (!tagParam) return [];
+    const label = tagParam.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    return [{ type: "tag", label, value: tagParam }];
+  });
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [total, setTotal] = useState(0);
@@ -95,18 +101,30 @@ export default function HomePage() {
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
+    const tagParam = searchParams.get("tag");
+    if (tagParam) {
+      const label = tagParam.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      setFilters((prev) => {
+        const already = prev.some((f) => f.type === "tag" && f.value === tagParam);
+        return already ? prev : [...prev, { type: "tag", label, value: tagParam }];
+      });
+    }
   }, [searchParams]);
 
   const buildParams = useCallback((offset = 0) => {
     const params = new URLSearchParams();
     if (activeCategory) params.set("category", activeCategory);
     if (search) params.set("search", search);
+    const tagFilters = filters.filter((f) => f.type === "tag");
+    const authorFilter = filters.find((f) => f.type === "author");
+    if (tagFilters.length > 0) params.set("tags", tagFilters.map((f) => f.value).join(","));
+    if (authorFilter) params.set("author", authorFilter.value);
     if (dateRange?.from) params.set("dateFrom", format(dateRange.from, "yyyy-MM-dd"));
     if (dateRange?.to) params.set("dateTo", format(dateRange.to, "yyyy-MM-dd"));
     params.set("limit", String(PAGE_SIZE));
     params.set("offset", String(offset));
     return params;
-  }, [activeCategory, search, dateRange]);
+  }, [activeCategory, search, filters, dateRange]);
 
   const fetchPatterns = useCallback(async () => {
     setLoading(true);
@@ -195,7 +213,7 @@ export default function HomePage() {
           </a>
 
           <div className="absolute left-1/2 -translate-x-1/2 top-3">
-            <SearchBar value={search} onChange={setSearch} />
+            <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} />
           </div>
         </div>
       </header>

@@ -103,7 +103,14 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
 
-    captureQueue = [...selection];
+    captureQueue = [...selection].sort((a, b) => {
+      if ("x" in a && "x" in b) {
+        const dx = (a as SceneNode & { x: number }).x - (b as SceneNode & { x: number }).x;
+        if (Math.abs(dx) > 1) return dx;
+        return ("y" in a && "y" in b) ? (a as SceneNode & { y: number }).y - (b as SceneNode & { y: number }).y : 0;
+      }
+      return 0;
+    });
     captureIndex = 0;
     await captureCurrentNode();
   }

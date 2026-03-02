@@ -493,6 +493,14 @@ body {
   color: #667691;
 }
 
+.mode-hint {
+  font-size: 11px;
+  color: #667691;
+  line-height: 1.5;
+  text-align: center;
+  padding: 12px 20px 0;
+}
+
 /* Back button */
 
 .back-button {

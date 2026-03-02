@@ -5,6 +5,8 @@ import { ensureTags } from "@/lib/tags";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const tag = searchParams.get("tag");
+  const tags = searchParams.get("tags");
+  const author = searchParams.get("author");
   const category = searchParams.get("category");
   const search = searchParams.get("search");
   const status = searchParams.get("status") || "published";
@@ -28,10 +30,21 @@ export async function GET(request: NextRequest) {
     where.category = category;
   }
 
-  if (tag) {
+  if (tags) {
+    const tagSlugs = tags.split(",").map((t) => t.trim()).filter(Boolean);
+    if (tagSlugs.length > 0) {
+      where.AND = tagSlugs.map((slug) => ({
+        tags: { some: { tag: { slug } } },
+      }));
+    }
+  } else if (tag) {
     where.tags = {
       some: { tag: { slug: tag } },
     };
+  }
+
+  if (author) {
+    where.authorName = author;
   }
 
   if (dateFrom || dateTo) {

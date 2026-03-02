@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
   const suggestions: { type: string; label: string; value: string; avatar?: string }[] = [];
 
   for (const t of tags) {
-    suggestions.push({ type: "tag", label: t.name, value: t.name });
+    suggestions.push({ type: "tag", label: t.name, value: t.slug });
   }
   for (const p of patterns) {
     suggestions.push({ type: "pattern", label: p.title, value: p.title });
