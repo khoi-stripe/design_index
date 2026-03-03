@@ -48,8 +48,13 @@ export async function GET(
         },
       },
     },
-    include: { tags: { include: { tag: true } }, library: true },
-    take: 6,
+    include: {
+      tags: { include: { tag: true } },
+      library: true,
+      images: { orderBy: { sortOrder: "asc" } },
+      _count: { select: { upvotes: true } },
+    },
+    take: 24,
   });
 
   const effectiveStatus = pattern.status || "concept";

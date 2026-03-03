@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -227,6 +227,13 @@ export default function PatternDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [editImageOrder, setEditImageOrder] = useState<OrderableImage[]>([]);
 
+  const [relCategory, setRelCategory] = useState<string | null>(null);
+  const [relStatus, setRelStatus] = useState<string | null>(null);
+  const [showRelTypeMenu, setShowRelTypeMenu] = useState(false);
+  const [showRelStatusMenu, setShowRelStatusMenu] = useState(false);
+  const relTypeRef = useRef<HTMLDivElement>(null);
+  const relStatusRef = useRef<HTMLDivElement>(null);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -251,6 +258,8 @@ export default function PatternDetailPage() {
 
   useEffect(() => {
     fetchPattern();
+    setRelCategory(null);
+    setRelStatus(null);
   }, [fetchPattern]);
 
   useEffect(() => {
@@ -436,6 +445,37 @@ export default function PatternDetailPage() {
       return arrayMove(items, oldIndex, newIndex);
     });
   };
+
+  const filteredRelated = useMemo(() => {
+    let list = related;
+    if (relCategory) list = list.filter((p) => p.category === relCategory);
+    if (relStatus) {
+      list = list.filter((p) => {
+        const eff = p.effectiveStatus || p.status || "concept";
+        return eff === relStatus;
+      });
+    }
+    return list;
+  }, [related, relCategory, relStatus]);
+
+  const relTypeCatLabel = CATEGORIES.find((c) => c.value === relCategory)?.label || "All";
+  const REL_STATUS_OPTIONS = [
+    { value: null, label: "All", color: "#FFFFFF" },
+    { value: "concept", label: "Concept", color: "#5B9BF8" },
+    { value: "in-use", label: "In-use", color: "#3ECF8E" },
+    { value: "official", label: "Official", color: "#675DFF" },
+  ] as const;
+  const relStatusLabel = REL_STATUS_OPTIONS.find((s) => s.value === relStatus)?.label || "All";
+  const hasRelFilters = !!(relCategory || relStatus);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (relTypeRef.current && !relTypeRef.current.contains(e.target as Node)) setShowRelTypeMenu(false);
+      if (relStatusRef.current && !relStatusRef.current.contains(e.target as Node)) setShowRelStatusMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   if (loading) {
     return (
@@ -1026,8 +1066,63 @@ export default function PatternDetailPage() {
 
         {!editing && related.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-lg font-semibold text-foreground mb-6">Related patterns</h2>
-            <PatternGrid patterns={related} />
+            <div className="flex items-center gap-4 mb-6">
+              <h2 className="text-lg font-semibold text-foreground">Related patterns</h2>
+              <div className="flex items-center gap-1.5">
+                {/* Type filter */}
+                <div ref={relTypeRef} className="relative">
+                  <button
+                    onClick={() => { setShowRelTypeMenu(!showRelTypeMenu); setShowRelStatusMenu(false); }}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showRelTypeMenu ? "text-foreground bg-background border !border-border" : ""}`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    <span className="font-medium tracking-tight">Type: {relTypeCatLabel}</span>
+                  </button>
+                  {showRelTypeMenu && (
+                    <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg menu-spring-enter">
+                      {[{ value: null, label: "All" }, ...CATEGORIES].map((cat) => (
+                        <button key={cat.label} onClick={() => { setRelCategory(cat.value); setShowRelTypeMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${relCategory === cat.value ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>{cat.label}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Status filter */}
+                <div ref={relStatusRef} className="relative">
+                  <button
+                    onClick={() => { setShowRelStatusMenu(!showRelStatusMenu); setShowRelTypeMenu(false); }}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showRelStatusMenu ? "text-foreground bg-background border !border-border" : ""}`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    <span className="font-medium tracking-tight">Status: {relStatusLabel}</span>
+                  </button>
+                  {showRelStatusMenu && (
+                    <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg menu-spring-enter">
+                      {REL_STATUS_OPTIONS.map((opt) => (
+                        <button key={opt.label} onClick={() => { setRelStatus(opt.value); setShowRelStatusMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors flex items-center gap-2 ${relStatus === opt.value ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>
+                          <span className="shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Count */}
+                <span className="text-xs text-neutral-400 py-1 px-2 bg-neutral-900 rounded-[3px]">
+                  {filteredRelated.length}
+                </span>
+                {/* Clear */}
+                {hasRelFilters && (
+                  <button
+                    onClick={() => { setRelCategory(null); setRelStatus(null); }}
+                    className="flex items-center gap-1 px-2 py-1 text-[11px] text-muted hover:text-foreground transition-colors"
+                  >
+                    Clear
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            <PatternGrid patterns={filteredRelated} />
           </div>
         )}
       </div>
