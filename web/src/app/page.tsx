@@ -402,7 +402,7 @@ export default function HomePage() {
               <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} />
             </div>
           ) : (
-            <nav className="flex items-center gap-4 ml-8">
+            <nav className="flex items-center gap-6 ml-6">
               {libraries.map((lib) => (
                 <a key={lib.id} href={`/libraries/${lib.slug}`} className="text-[13px] text-muted hover:text-foreground transition-colors">{lib.name}</a>
               ))}
