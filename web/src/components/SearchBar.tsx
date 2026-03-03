@@ -116,7 +116,7 @@ export function SearchBar({
   return (
     <div className={`${className ?? "w-[600px]"} max-w-full relative`} ref={containerRef}>
       <div
-        className="flex items-center gap-1.5 min-h-[36px] bg-surface rounded-lg transition-all border border-transparent focus-within:bg-card-bg focus-within:border-border cursor-text"
+        className="flex items-center gap-1.5 min-h-[36px] bg-surface rounded-lg transition-all border border-transparent hover:bg-card-bg hover:border-border focus-within:bg-card-bg focus-within:border-border cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
         <svg
