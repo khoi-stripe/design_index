@@ -324,7 +324,7 @@ export default function HomePage() {
             {/* Left: Filters + count */}
             <div className="flex items-center gap-1.5 flex-1">
               {/* Type filter */}
-              <div className="relative inline-block">
+              <div className="relative inline-block order-2">
                 <button
                   onClick={toggleTypeMenu}
                   className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showTypeMenu ? "text-foreground bg-background border !border-border" : ""}`}
@@ -365,7 +365,7 @@ export default function HomePage() {
               </div>
 
               {/* Library filter */}
-              <div className="relative inline-block">
+              <div className="relative inline-block order-1">
                 <button
                   onClick={toggleLibraryMenu}
                   className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showLibraryMenu ? "text-foreground bg-background border !border-border" : ""}`}
@@ -424,7 +424,7 @@ export default function HomePage() {
               </div>
 
               {/* Status filter */}
-              <div className="relative inline-block">
+              <div className="relative inline-block order-3">
                 <button
                   onClick={toggleStatusMenu}
                   className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showStatusMenu ? "text-foreground bg-background border !border-border" : ""}`}
@@ -464,7 +464,7 @@ export default function HomePage() {
                 )}
               </div>
 
-              <span className="text-xs text-muted py-1 px-2">
+              <span className="text-xs text-muted py-1 px-2 order-4">
                 {loading ? "..." : patterns.length}
               </span>
             </div>
