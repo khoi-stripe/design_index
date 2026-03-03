@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { StatusBadge } from "@/components/StatusBadge";
+import { MetadataChip } from "@/components/MetadataChip";
 import { UpvoteButton } from "@/components/UpvoteButton";
 import { slugify } from "@/lib/utils";
 import { Tag } from "@/components/Tag";
@@ -151,6 +151,41 @@ function formatDate(iso: string) {
   });
 }
 
+function isLightColor(color: string) {
+  if (!color) return false;
+  const normalized = color.trim().toLowerCase();
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (normalized.startsWith("#")) {
+    const hex = normalized.slice(1);
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.slice(0, 2), 16);
+      g = parseInt(hex.slice(2, 4), 16);
+      b = parseInt(hex.slice(4, 6), 16);
+    } else {
+      return false;
+    }
+  } else if (normalized.startsWith("rgb")) {
+    const match = normalized.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return false;
+    r = Number(match[1]);
+    g = Number(match[2]);
+    b = Number(match[3]);
+  } else {
+    return false;
+  }
+
+  // Relative luminance approximation for contrast decisions.
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.62;
+}
+
 export default function PatternDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -253,6 +288,10 @@ export default function PatternDetailPage() {
   }, [displayScreenshot, pattern, activeVersion]);
 
   const allImages = editing && editImageOrder.length > 0 ? editImageOrder : allImagesWithIds;
+  const useDarkArrows = useMemo(() => isLightColor(allImages[activeImageIndex]?.dominantColor || ""), [allImages, activeImageIndex]);
+  const mainArrowClass = useDarkArrows
+    ? "bg-white/70 text-black hover:bg-white/85 hover:border-black/20"
+    : "bg-black/40 text-white hover:bg-black/60 hover:border-white/40";
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -518,7 +557,7 @@ export default function PatternDetailPage() {
                 <>
                   <button
                     onClick={() => setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-black/40 border border-transparent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:border-white/40 hover:bg-black/60"
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg border border-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all ${mainArrowClass}`}
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                       <path d="M6.38128 1.38128C6.72299 1.03957 7.27701 1.03957 7.61872 1.38128C7.96043 1.72299 7.96043 2.27701 7.61872 2.61872L3.11244 7.125H15C15.4833 7.125 15.875 7.51675 15.875 8C15.875 8.48325 15.4833 8.875 15 8.875H3.11244L7.61872 13.3813C7.96043 13.723 7.96043 14.277 7.61872 14.6187C7.27701 14.9604 6.72299 14.9604 6.38128 14.6187L0.381282 8.61872C0.210427 8.44786 0.125 8.22393 0.125 8C0.125 7.77607 0.210427 7.55214 0.381282 7.38128L6.38128 1.38128Z" fill="currentColor" />
@@ -526,7 +565,7 @@ export default function PatternDetailPage() {
                   </button>
                   <button
                     onClick={() => setActiveImageIndex((i) => (i + 1) % allImages.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-black/40 border border-transparent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:border-white/40 hover:bg-black/60"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg border border-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all ${mainArrowClass}`}
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                       <path d="M9.61872 1.38128C9.27701 1.03957 8.72299 1.03957 8.38128 1.38128C8.03957 1.72299 8.03957 2.27701 8.38128 2.61872L12.8876 7.125H1C0.516751 7.125 0.125 7.51675 0.125 8C0.125 8.48325 0.516751 8.875 1 8.875H12.8876L8.38128 13.3813C8.03957 13.723 8.03957 14.277 8.38128 14.6187C8.72299 14.9604 9.27701 14.9604 9.61872 14.6187L15.6187 8.61872C15.7896 8.44786 15.875 8.22393 15.875 8C15.875 7.77607 15.7896 7.55214 15.6187 7.38128L9.61872 1.38128Z" fill="currentColor" />
@@ -698,211 +737,214 @@ export default function PatternDetailPage() {
                   )}
                 </div>
 
-                {/* Version selector */}
-                {hasVersions && (
-                  <div>
-                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Version</h3>
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowVersionDropdown(!showVersionDropdown)}
-                        className="flex items-center justify-between w-full px-3 h-9 bg-surface hover:bg-surface-hover text-sm text-foreground rounded-lg border border-border transition-colors"
-                      >
-                        <span>
-                          v{activeVersion?.versionNumber}
-                          {isLatest ? " (Latest)" : ""}
-                          {activeVersion?.label ? ` — ${activeVersion.label}` : ""}
-                        </span>
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className={`text-muted transition-transform ${showVersionDropdown ? "rotate-180" : ""}`}>
-                          <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
+                <div className="space-y-4">
+                  {/* Version selector */}
+                  {hasVersions && (
+                    <div>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Version</h3>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowVersionDropdown(!showVersionDropdown)}
+                          className="flex items-center justify-between w-full px-3 h-9 bg-surface hover:bg-surface-hover text-sm text-foreground rounded-lg border border-border transition-colors"
+                        >
+                          <span>
+                            v{activeVersion?.versionNumber}
+                            {isLatest ? " (Latest)" : ""}
+                            {activeVersion?.label ? ` — ${activeVersion.label}` : ""}
+                          </span>
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className={`text-muted transition-transform ${showVersionDropdown ? "rotate-180" : ""}`}>
+                            <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
 
-                      {showVersionDropdown && (
-                        <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg overflow-hidden">
-                          {pattern.versions.map((v, i) => (
+                        {showVersionDropdown && (
+                          <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg overflow-hidden">
                             <button
-                              key={v.id}
                               onClick={() => {
-                                setSelectedVersionId(v.id);
+                                setShowAddVersion(true);
                                 setShowVersionDropdown(false);
                               }}
-                              className={`flex items-center justify-between w-full px-3 py-2.5 text-sm text-left transition-colors ${
-                                v.id === activeVersion?.id
-                                  ? "bg-accent/10 text-accent"
-                                  : "text-foreground hover:bg-surface"
-                              }`}
+                              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-left text-foreground hover:bg-surface transition-colors"
                             >
-                              <span className="truncate">
-                                v{v.versionNumber}
-                                {i === 0 ? " (Latest)" : ""}
-                                {v.label ? ` — ${v.label}` : ""}
-                              </span>
-                              <span className="text-xs text-muted ml-2 shrink-0">{formatDate(v.createdAt)}</span>
+                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-muted">
+                                <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              </svg>
+                              <span>Add version</span>
                             </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {showAddVersion ? (
-                      <div className="mt-3 space-y-2 p-3 bg-surface rounded-lg border border-border">
-                        <input
-                          type="text"
-                          placeholder="Paste Figma link..."
-                          value={versionUrl}
-                          onChange={(e) => setVersionUrl(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
-                          autoFocus
-                        />
-                        <input
-                          type="text"
-                          placeholder="Label (optional, e.g. 'Dark mode variant')"
-                          value={versionLabel}
-                          onChange={(e) => setVersionLabel(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
-                        />
-                        <textarea
-                          placeholder="Description (optional)"
-                          value={versionDescription}
-                          onChange={(e) => setVersionDescription(e.target.value)}
-                          rows={2}
-                          className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent resize-y"
-                        />
-                        <div>
-                          <div className="flex flex-wrap gap-1 mb-1.5">
-                            {versionTags.map((slug) => (
-                              <Tag key={slug} label={slug.replace(/-/g, " ")} onRemove={() => setVersionTags((prev) => prev.filter((t) => t !== slug))} />
+                            <div className="h-px bg-border" />
+                            {pattern.versions.map((v, i) => (
+                              <button
+                                key={v.id}
+                                onClick={() => {
+                                  setSelectedVersionId(v.id);
+                                  setShowVersionDropdown(false);
+                                }}
+                                className={`flex items-center justify-between w-full px-3 py-2.5 text-sm text-left transition-colors ${
+                                  v.id === activeVersion?.id
+                                    ? "bg-accent/10 text-accent"
+                                    : "text-foreground hover:bg-surface"
+                                }`}
+                              >
+                                <span className="truncate">
+                                  v{v.versionNumber}
+                                  {i === 0 ? " (Latest)" : ""}
+                                  {v.label ? ` — ${v.label}` : ""}
+                                </span>
+                                <span className="text-xs text-muted ml-2 shrink-0">{formatDate(v.createdAt)}</span>
+                              </button>
                             ))}
                           </div>
-                          <div className="flex gap-1.5">
-                            <input
-                              type="text"
-                              value={newVersionTag}
-                              onChange={(e) => setNewVersionTag(e.target.value)}
-                              onKeyDown={(e) => e.key === "Enter" && addVersionTag()}
-                              placeholder="Add tag..."
-                              className="flex-1 px-2 py-1 text-xs bg-background text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
-                            />
-                            {newVersionTag && (
-                              <button onClick={addVersionTag} className="px-2 py-1 text-xs font-medium bg-accent text-white rounded-[4px]">
-                                Add
-                              </button>
-                            )}
+                        )}
+                      </div>
+
+                      {showAddVersion ? (
+                        <div className="mt-3 space-y-2 p-3 bg-surface rounded-lg border border-border">
+                          <input
+                            type="text"
+                            placeholder="Paste Figma link..."
+                            value={versionUrl}
+                            onChange={(e) => setVersionUrl(e.target.value)}
+                            className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
+                            autoFocus
+                          />
+                          <input
+                            type="text"
+                            placeholder="Label (optional, e.g. 'Dark mode variant')"
+                            value={versionLabel}
+                            onChange={(e) => setVersionLabel(e.target.value)}
+                            className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
+                          />
+                          <textarea
+                            placeholder="Description (optional)"
+                            value={versionDescription}
+                            onChange={(e) => setVersionDescription(e.target.value)}
+                            rows={2}
+                            className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent resize-y"
+                          />
+                          <div>
+                            <div className="flex flex-wrap gap-1 mb-1.5">
+                              {versionTags.map((slug) => (
+                                <Tag key={slug} label={slug.replace(/-/g, " ")} onRemove={() => setVersionTags((prev) => prev.filter((t) => t !== slug))} />
+                              ))}
+                            </div>
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                value={newVersionTag}
+                                onChange={(e) => setNewVersionTag(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && addVersionTag()}
+                                placeholder="Add tag..."
+                                className="flex-1 px-2 py-1 text-xs bg-background text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
+                              />
+                              {newVersionTag && (
+                                <button onClick={addVersionTag} className="px-2 py-1 text-xs font-medium bg-accent text-white rounded-[4px]">
+                                  Add
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={addVersion}
+                              disabled={addingVersion || !versionUrl.trim()}
+                              className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
+                            >
+                              {addingVersion ? "Fetching screenshot..." : "Add version"}
+                            </button>
+                            <button
+                              onClick={() => { setShowAddVersion(false); setVersionUrl(""); setVersionLabel(""); setVersionDescription(""); setVersionTags([]); }}
+                              className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-[4px] transition-colors"
+                            >
+                              Cancel
+                            </button>
                           </div>
                         </div>
-                        <div className="flex gap-2 pt-1">
-                          <button
-                            onClick={addVersion}
-                            disabled={addingVersion || !versionUrl.trim()}
-                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
-                          >
-                            {addingVersion ? "Fetching screenshot..." : "Add version"}
-                          </button>
-                          <button
-                            onClick={() => { setShowAddVersion(false); setVersionUrl(""); setVersionLabel(""); setVersionDescription(""); setVersionTags([]); }}
-                            className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-[4px] transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowAddVersion(true)}
-                        className="mt-2 flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                          <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                        Add version
-                      </button>
-                    )}
-                  </div>
-                )}
+                      ) : null}
+                    </div>
+                  )}
 
-                {/* No versions yet — just show add version */}
-                {!hasVersions && (
-                  <div>
-                    {showAddVersion ? (
-                      <div className="space-y-2 p-3 bg-surface rounded-lg border border-border">
-                        <input
-                          type="text"
-                          placeholder="Paste Figma link..."
-                          value={versionUrl}
-                          onChange={(e) => setVersionUrl(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
-                          autoFocus
-                        />
-                        <input
-                          type="text"
-                          placeholder="Label (optional)"
-                          value={versionLabel}
-                          onChange={(e) => setVersionLabel(e.target.value)}
-                          className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
-                        />
-                        <textarea
-                          placeholder="Description (optional)"
-                          value={versionDescription}
-                          onChange={(e) => setVersionDescription(e.target.value)}
-                          rows={2}
-                          className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent resize-y"
-                        />
-                        <div className="flex gap-2 pt-1">
-                          <button
-                            onClick={addVersion}
-                            disabled={addingVersion || !versionUrl.trim()}
-                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
-                          >
-                            {addingVersion ? "Fetching screenshot..." : "Add version"}
-                          </button>
-                          <button
-                            onClick={() => { setShowAddVersion(false); setVersionUrl(""); setVersionLabel(""); setVersionDescription(""); }}
-                            className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-[4px] transition-colors"
-                          >
-                            Cancel
-                          </button>
+                  {/* No versions yet — just show add version */}
+                  {!hasVersions && (
+                    <div>
+                      {showAddVersion ? (
+                        <div className="space-y-2 p-3 bg-surface rounded-lg border border-border">
+                          <input
+                            type="text"
+                            placeholder="Paste Figma link..."
+                            value={versionUrl}
+                            onChange={(e) => setVersionUrl(e.target.value)}
+                            className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
+                            autoFocus
+                          />
+                          <input
+                            type="text"
+                            placeholder="Label (optional)"
+                            value={versionLabel}
+                            onChange={(e) => setVersionLabel(e.target.value)}
+                            className="w-full h-9 px-3 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent"
+                          />
+                          <textarea
+                            placeholder="Description (optional)"
+                            value={versionDescription}
+                            onChange={(e) => setVersionDescription(e.target.value)}
+                            rows={2}
+                            className="w-full px-3 py-2 text-sm bg-background text-foreground border border-border rounded-[4px] focus:outline-none focus:border-accent resize-y"
+                          />
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={addVersion}
+                              disabled={addingVersion || !versionUrl.trim()}
+                              className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
+                            >
+                              {addingVersion ? "Fetching screenshot..." : "Add version"}
+                            </button>
+                            <button
+                              onClick={() => { setShowAddVersion(false); setVersionUrl(""); setVersionLabel(""); setVersionDescription(""); }}
+                              className="px-3 h-8 text-xs font-medium text-muted hover:text-foreground rounded-[4px] transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowAddVersion(true)}
-                        className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                          <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                        Add version
-                      </button>
-                    )}
-                  </div>
-                )}
+                      ) : (
+                        <button
+                          onClick={() => setShowAddVersion(true)}
+                          className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                          </svg>
+                          Add version
+                        </button>
+                      )}
+                    </div>
+                  )}
 
-                {/* Open in Figma */}
-                {displayFigmaUrl && (
-                  <a
-                    href={displayFigmaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full h-10 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 38 57" fill="currentColor">
-                      <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" />
-                      <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 1 1-19 0z" />
-                      <path d="M19 0v19h9.5a9.5 9.5 0 1 0 0-19H19z" />
-                      <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" />
-                      <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" />
-                    </svg>
-                    Open in Figma
-                  </a>
-                )}
+                  {/* Open in Figma */}
+                  {displayFigmaUrl && (
+                    <a
+                      href={displayFigmaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full h-9 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 38 57" fill="currentColor">
+                        <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" />
+                        <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 1 1-19 0z" />
+                        <path d="M19 0v19h9.5a9.5 9.5 0 1 0 0-19H19z" />
+                        <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" />
+                        <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" />
+                      </svg>
+                      Open in Figma
+                    </a>
+                  )}
+                </div>
 
                 <div className="space-y-4">
                   {pattern.category && (
                     <div>
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Category</h3>
-                      <span className="inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-[4px] capitalize">
-                        {pattern.category}
-                      </span>
+                      <MetadataChip label={pattern.category} />
                     </div>
                   )}
 
@@ -920,12 +962,7 @@ export default function PatternDetailPage() {
                   {pattern.library && (
                     <div>
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Library</h3>
-                      <Link
-                        href={`/libraries/${pattern.library.slug}`}
-                        className="text-sm text-muted hover:text-foreground transition-colors"
-                      >
-                        {pattern.library.name}
-                      </Link>
+                      <MetadataChip label={pattern.library.name} href={`/libraries/${pattern.library.slug}`} />
                       {pattern.library.team && (
                         <span className="text-sm text-muted ml-1">({pattern.library.team})</span>
                       )}
@@ -935,7 +972,7 @@ export default function PatternDetailPage() {
                   {pattern.effectiveStatus && (
                     <div>
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Status</h3>
-                      <StatusBadge status={pattern.effectiveStatus} />
+                      <MetadataChip label={pattern.effectiveStatus} />
                     </div>
                   )}
 
@@ -1043,7 +1080,7 @@ export default function PatternDetailPage() {
                   e.stopPropagation();
                   setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-white/10 border border-transparent text-white flex items-center justify-center transition-all hover:border-white/30 hover:bg-white/20"
+                className={`absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg border border-transparent flex items-center justify-center transition-all ${mainArrowClass}`}
               >
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
                   <path d="M6.38128 1.38128C6.72299 1.03957 7.27701 1.03957 7.61872 1.38128C7.96043 1.72299 7.96043 2.27701 7.61872 2.61872L3.11244 7.125H15C15.4833 7.125 15.875 7.51675 15.875 8C15.875 8.48325 15.4833 8.875 15 8.875H3.11244L7.61872 13.3813C7.96043 13.723 7.96043 14.277 7.61872 14.6187C7.27701 14.9604 6.72299 14.9604 6.38128 14.6187L0.381282 8.61872C0.210427 8.44786 0.125 8.22393 0.125 8C0.125 7.77607 0.210427 7.55214 0.381282 7.38128L6.38128 1.38128Z" fill="currentColor" />
@@ -1054,7 +1091,7 @@ export default function PatternDetailPage() {
                   e.stopPropagation();
                   setActiveImageIndex((i) => (i + 1) % allImages.length);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-white/10 border border-transparent text-white flex items-center justify-center transition-all hover:border-white/30 hover:bg-white/20"
+                className={`absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg border border-transparent flex items-center justify-center transition-all ${mainArrowClass}`}
               >
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
                   <path d="M9.61872 1.38128C9.27701 1.03957 8.72299 1.03957 8.38128 1.38128C8.03957 1.72299 8.03957 2.27701 8.38128 2.61872L12.8876 7.125H1C0.516751 7.125 0.125 7.51675 0.125 8C0.125 8.48325 0.516751 8.875 1 8.875H12.8876L8.38128 13.3813C8.03957 13.723 8.03957 14.277 8.38128 14.6187C8.72299 14.9604 9.27701 14.9604 9.61872 14.6187L15.6187 8.61872C15.7896 8.44786 15.875 8.22393 15.875 8C15.875 7.77607 15.7896 7.55214 15.6187 7.38128L9.61872 1.38128Z" fill="currentColor" />

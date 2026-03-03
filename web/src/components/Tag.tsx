@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const baseClass =
-  "inline-flex items-center shrink-0 gap-1 px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[3px] whitespace-nowrap transition-colors";
+  "inline-flex items-center shrink-0 gap-1 px-2 py-[2px] text-[11px] font-medium bg-accent text-white rounded-[3px] whitespace-nowrap transition-colors lowercase";
 
 export function Tag({
   label,

@@ -7,6 +7,40 @@ import Image from "next/image";
 import type { Pattern } from "@/lib/types";
 import { Tag } from "@/components/Tag";
 
+function isLightColor(color: string) {
+  if (!color) return false;
+  const normalized = color.trim().toLowerCase();
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (normalized.startsWith("#")) {
+    const hex = normalized.slice(1);
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.slice(0, 2), 16);
+      g = parseInt(hex.slice(2, 4), 16);
+      b = parseInt(hex.slice(4, 6), 16);
+    } else {
+      return false;
+    }
+  } else if (normalized.startsWith("rgb")) {
+    const match = normalized.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return false;
+    r = Number(match[1]);
+    g = Number(match[2]);
+    b = Number(match[3]);
+  } else {
+    return false;
+  }
+
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.62;
+}
+
 export function PatternCard({
   pattern,
   priority = false,
@@ -35,6 +69,10 @@ export function PatternCard({
   const currentImage = allImages[activeIndex] || allImages[0];
   const imgSrc = currentImage?.src;
   const bgColor = currentImage?.dominantColor || "var(--surface)";
+  const useDarkArrows = useMemo(() => isLightColor(bgColor), [bgColor]);
+  const cardArrowClass = useDarkArrows
+    ? "bg-white/70 text-black hover:bg-white/85 hover:border-black/20"
+    : "bg-black/40 text-white hover:bg-black/60 hover:border-white/40";
 
   const goNext = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -113,7 +151,7 @@ export function PatternCard({
             <>
               <button
                 onClick={goPrev}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white/80 border border-transparent text-neutral-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:border-accent hover:text-accent z-10"
+                className={`absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg border border-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 ${cardArrowClass}`}
                 aria-label="Previous image"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -122,7 +160,7 @@ export function PatternCard({
               </button>
               <button
                 onClick={goNext}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white/80 border border-transparent text-neutral-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:border-accent hover:text-accent z-10"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg border border-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 ${cardArrowClass}`}
                 aria-label="Next image"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
