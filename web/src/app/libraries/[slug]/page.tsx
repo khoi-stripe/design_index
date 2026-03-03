@@ -10,6 +10,7 @@ import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { setBreadcrumbOrigin } from "@/components/Breadcrumb";
 import { LibraryIcon } from "@/components/MetadataChip";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { Library, Pattern } from "@/lib/types";
 
 const CATEGORIES = [
@@ -479,11 +480,9 @@ export default function LibraryDetailPage() {
                   <LibraryIcon className="w-4 h-4 text-foreground" />
                   {library.name}
                 </h1>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-[4px] capitalize">
-                    {library.status || "concept"}
-                  </span>
-                  <span className="text-xs text-muted self-center">
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <StatusBadge status={library.status || "concept"} />
+                  <span className="text-xs text-muted">
                     {library._count?.patterns ?? 0} pattern{(library._count?.patterns ?? 0) !== 1 ? "s" : ""}
                   </span>
                 </div>

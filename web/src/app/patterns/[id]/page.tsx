@@ -999,13 +999,19 @@ export default function PatternDetailPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {(pattern.library || displayTags.length > 0) && (
+                  <div>
+                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Library</h3>
+                    {pattern.library ? (
+                      <MetadataChip label={pattern.library.name} href={`/libraries/${pattern.library.slug}`} icon={<LibraryIcon />} />
+                    ) : (
+                      <span className="text-sm text-muted">None</span>
+                    )}
+                  </div>
+
+                  {displayTags.length > 0 && (
                     <div>
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Tags</h3>
                       <div className="flex flex-wrap gap-1.5">
-                        {pattern.library && (
-                          <MetadataChip label={pattern.library.name} href={`/libraries/${pattern.library.slug}`} icon={<LibraryIcon />} />
-                        )}
                         {displayTags.map(({ tag }) => (
                           <Tag key={tag.id} label={tag.name} href={`/?tag=${encodeURIComponent(tag.slug)}`} />
                         ))}

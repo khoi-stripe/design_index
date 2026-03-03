@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { Library } from "@/lib/types";
 
 const STATUS_OPTIONS = [
@@ -255,13 +256,8 @@ export default function LibrariesPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-1.5 mb-2">
-                          <span className="inline-block px-2.5 py-0.5 text-[11px] font-medium bg-surface text-muted rounded-[4px]">
-                            {lib.team || "—"}
-                          </span>
-                          <span className="inline-block px-2.5 py-0.5 text-[11px] font-medium bg-accent/15 text-accent rounded-[4px] capitalize">
-                            {lib.status || "concept"}
-                          </span>
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          <StatusBadge status={lib.status || "concept"} />
                           <span className="text-xs text-muted">
                             {lib._count?.patterns ?? 0} pattern{(lib._count?.patterns ?? 0) !== 1 ? "s" : ""}
                           </span>
