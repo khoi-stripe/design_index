@@ -53,7 +53,7 @@ export async function createPattern(data: {
 }
 
 export async function fetchLibraries(): Promise<
-  { id: string; name: string; slug: string; team: string; status: string; description: string }[]
+  { id: string; name: string; slug: string; status: string; description: string }[]
 > {
   const res = await fetch(`${API_BASE}/libraries`);
   if (!res.ok) throw new Error("Failed to fetch libraries");

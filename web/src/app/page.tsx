@@ -22,7 +22,7 @@ const CATEGORIES = [
 const STATUS_OPTIONS = [
   { value: null, label: "All", color: "#FFFFFF" },
   { value: "concept", label: "Concept", color: "#5B9BF8" },
-  { value: "community", label: "In-use", color: "#3ECF8E" },
+  { value: "in-use", label: "In-use", color: "#3ECF8E" },
   { value: "official", label: "Official", color: "#675DFF" },
 ] as const;
 
@@ -268,6 +268,27 @@ export default function HomePage() {
   const activeStatusLabel =
     STATUS_OPTIONS.find((s) => s.value === activeStatus)?.label || "All";
 
+  const hasActiveFilters = !!(activeCategory || activeLibrary || activeStatus || search || filters.length > 0 || dateRange);
+
+  const clearAllFilters = () => {
+    setActiveCategory(null);
+    setActiveLibrary(null);
+    setActiveStatus(null);
+    setSearch("");
+    setFilters([]);
+    setDateRange(undefined);
+  };
+
+  const clearButton = hasActiveFilters ? (
+    <button
+      onClick={clearAllFilters}
+      className="flex items-center gap-1 px-2 py-1 text-[11px] text-muted hover:text-foreground transition-colors"
+    >
+      Clear
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+    </button>
+  ) : null;
+
   const logoLink = (
     <a
       href="/"
@@ -400,6 +421,7 @@ export default function HomePage() {
                 <div className="order-2">{typeFilterMenu}</div>
                 <div className="order-3">{statusFilterMenu}</div>
                 <div className="order-4">{countBadge}</div>
+                <div className="order-5">{clearButton}</div>
               </div>
               <div className="flex items-center gap-1.5">
                 {dateRangeControl}
@@ -416,6 +438,7 @@ export default function HomePage() {
                 {statusFilterMenu}
                 {dateRangeControl}
                 {countBadge}
+                {clearButton}
               </div>
             </div>
           )}

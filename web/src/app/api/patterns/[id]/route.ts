@@ -51,7 +51,7 @@ export async function GET(
     take: 6,
   });
 
-  const effectiveStatus = pattern.status || pattern.library?.status || "community";
+  const effectiveStatus = pattern.status || "concept";
 
   return NextResponse.json({
     pattern: { ...pattern, effectiveStatus, upvotedByVisitor },

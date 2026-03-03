@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       slug,
       team: team || "",
       description: description || "",
-      status: status || "community",
+      status: status || "concept",
     },
     include: { _count: { select: { patterns: true } } },
   });

@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Pattern } from "@/lib/types";
 import { Tag } from "@/components/Tag";
-import { StatusBadge } from "@/components/StatusBadge";
+import { MetadataChip, LibraryIcon } from "@/components/MetadataChip";
+const STATUS_COLORS: Record<string, string> = {
+  official: "#675DFF",
+  "in-use": "#3ECF8E",
+  concept: "#5B9BF8",
+};
 
 function isLightColor(color: string) {
   if (!color) return false;
@@ -108,16 +113,11 @@ export function PatternCard({
           {!imageLoaded && imgSrc && (
             <div className="absolute inset-0 bg-surface animate-pulse" />
           )}
-          {(pattern.effectiveStatus || pattern.category) && (
+          {pattern.category && (
             <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {pattern.effectiveStatus && (
-                <StatusBadge status={pattern.effectiveStatus} variant={useDarkArrows ? "light" : "dark"} />
-              )}
-              {pattern.category && (
-                <span className="px-2 py-[2px] text-[11px] font-medium bg-black/60 text-white rounded-[3px] whitespace-nowrap capitalize">
-                  {pattern.category}
-                </span>
-              )}
+              <span className="px-2 py-[2px] text-[11px] font-medium bg-black/60 text-white rounded-[3px] whitespace-nowrap capitalize">
+                {pattern.category}
+              </span>
             </div>
           )}
           {imgSrc ? (
@@ -185,9 +185,17 @@ export function PatternCard({
         </div>
         <div className="bg-card-bg p-4 flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="font-medium text-sm text-foreground leading-tight tracking-tight min-w-0 truncate">
-              {pattern.title}
-            </h3>
+            <div className="flex items-center gap-1.5 min-w-0">
+              {pattern.effectiveStatus && STATUS_COLORS[pattern.effectiveStatus] && (
+                <span
+                  className="shrink-0 w-2 h-2 rounded-full"
+                  style={{ backgroundColor: STATUS_COLORS[pattern.effectiveStatus] }}
+                />
+              )}
+              <h3 className="font-medium text-sm text-foreground leading-tight tracking-tight min-w-0 truncate">
+                {pattern.title}
+              </h3>
+            </div>
             {(pattern.authorAvatar || pattern.authorName) && (
               <div
                 className="relative shrink-0"
@@ -218,8 +226,11 @@ export function PatternCard({
               </div>
             )}
           </div>
-          {pattern.tags.length > 0 && (
+          {(pattern.library || pattern.tags.length > 0) && (
             <div className="flex items-center gap-1 overflow-hidden pr-8">
+              {pattern.library && (
+                <MetadataChip label={pattern.library.name} icon={<LibraryIcon />} className="shrink-0" />
+              )}
               {pattern.tags.map(({ tag }) => (
                 <Tag
                   key={tag.id}

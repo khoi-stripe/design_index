@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { SearchBar, type SearchFilter } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
@@ -9,6 +9,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { setBreadcrumbOrigin } from "@/components/Breadcrumb";
+import { LibraryIcon } from "@/components/MetadataChip";
 import type { Library, Pattern } from "@/lib/types";
 
 const CATEGORIES = [
@@ -22,19 +23,20 @@ const CATEGORIES = [
 const STATUS_OPTIONS = [
   { value: null, label: "All", color: "#FFFFFF" },
   { value: "concept", label: "Concept", color: "#5B9BF8" },
-  { value: "community", label: "In-use", color: "#3ECF8E" },
+  { value: "in-use", label: "In-use", color: "#3ECF8E" },
   { value: "official", label: "Official", color: "#675DFF" },
 ] as const;
 
 const EDIT_STATUS_OPTIONS = [
   { value: "official", label: "Official" },
-  { value: "community", label: "In-use" },
+  { value: "in-use", label: "In-use" },
   { value: "concept", label: "Concept" },
 ] as const;
 
 const PAGE_SIZE = 24;
 
 export default function LibraryDetailPage() {
+  const router = useRouter();
   const { slug } = useParams<{ slug: string }>();
   const [library, setLibrary] = useState<Library | null>(null);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
@@ -46,7 +48,6 @@ export default function LibraryDetailPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState("");
-  const [editTeam, setEditTeam] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editStatus, setEditStatus] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -137,9 +138,8 @@ export default function LibraryDetailPage() {
       setLibrary(data);
       setBreadcrumbOrigin(`/libraries/${slug}`, data.name);
       setEditName(data.name);
-      setEditTeam(data.team || "");
       setEditDescription(data.description || "");
-      setEditStatus(data.status || "community");
+      setEditStatus(data.status || "concept");
     } catch {
       setError("Failed to load library");
       setLibrary(null);
@@ -206,9 +206,8 @@ export default function LibraryDetailPage() {
   const startEditing = () => {
     if (!library) return;
     setEditName(library.name);
-    setEditTeam(library.team || "");
     setEditDescription(library.description || "");
-    setEditStatus(library.status || "community");
+    setEditStatus(library.status || "concept");
     setFormError(null);
     setEditing(true);
   };
@@ -229,7 +228,6 @@ export default function LibraryDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editName.trim(),
-          team: editTeam.trim(),
           description: editDescription.trim(),
           status: editStatus,
         }),
@@ -245,10 +243,46 @@ export default function LibraryDetailPage() {
     }
   };
 
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteLibrary = async () => {
+    if (!library) return;
+    if (!window.confirm(`Delete "${library.name}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/libraries/${library.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      router.push("/");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Failed to delete");
+      setDeleting(false);
+    }
+  };
+
   const activeCategoryLabel =
     CATEGORIES.find((c) => c.value === activeCategory)?.label || "All";
   const activeStatusLabel =
     STATUS_OPTIONS.find((s) => s.value === activeStatus)?.label || "All";
+
+  const hasActiveFilters = !!(activeCategory || activeStatus || search || filters.length > 0 || dateRange);
+
+  const clearAllFilters = () => {
+    setActiveCategory(null);
+    setActiveStatus(null);
+    setSearch("");
+    setFilters([]);
+    setDateRange(undefined);
+  };
+
+  const clearButton = hasActiveFilters ? (
+    <button
+      onClick={clearAllFilters}
+      className="flex items-center gap-1 px-2 py-1 text-[11px] text-muted hover:text-foreground transition-colors"
+    >
+      Clear
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+    </button>
+  ) : null;
 
   const typeFilterMenu = (
     <div className="relative inline-block">
@@ -333,24 +367,36 @@ export default function LibraryDetailPage() {
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="max-w-[1400px] mx-auto px-8 h-[60px] flex items-center justify-between">
           <nav className="flex items-center gap-1.5 text-sm min-w-0">
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-muted hover:text-foreground transition-colors shrink-0"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M0 12L12 9.45516V0L0 2.57459V12Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="text-xs font-semibold tracking-tight">Design.Index</span>
-            </Link>
-            <span className="text-muted shrink-0">&rarr;</span>
-            <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
-              {library.name}
-            </span>
+            {editing ? (
+              <button
+                onClick={deleteLibrary}
+                disabled={deleting}
+                className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-[4px] transition-colors disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Delete library"}
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 text-muted hover:text-foreground transition-colors shrink-0"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M0 12L12 9.45516V0L0 2.57459V12Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span className="text-xs font-semibold tracking-tight">Design.Index</span>
+                </Link>
+                <span className="text-muted shrink-0">&rarr;</span>
+                <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
+                  {library.name}
+                </span>
+              </>
+            )}
           </nav>
           <div className="flex items-center gap-2">
             {editing ? (
@@ -400,17 +446,6 @@ export default function LibraryDetailPage() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-1.5">
-                    Team
-                  </label>
-                  <input
-                    type="text"
-                    value={editTeam}
-                    onChange={(e) => setEditTeam(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-1.5">
                     Description
                   </label>
                   <textarea
@@ -440,13 +475,13 @@ export default function LibraryDetailPage() {
               </div>
             ) : (
               <>
-                <h1 className="text-2xl font-semibold text-foreground mb-3">{library.name}</h1>
+                <h1 className="flex items-center gap-3 text-2xl font-semibold text-foreground mb-3">
+                  <LibraryIcon className="w-4 h-4 text-foreground" />
+                  {library.name}
+                </h1>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="inline-block px-2.5 py-1 text-xs font-medium bg-surface text-muted rounded-[4px]">
-                    {library.team || "—"}
-                  </span>
                   <span className="inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-[4px] capitalize">
-                    {library.status || "community"}
+                    {library.status || "concept"}
                   </span>
                   <span className="text-xs text-muted self-center">
                     {library._count?.patterns ?? 0} pattern{(library._count?.patterns ?? 0) !== 1 ? "s" : ""}
@@ -470,6 +505,7 @@ export default function LibraryDetailPage() {
                 {statusFilterMenu}
                 {dateRangeControl}
                 {countBadge}
+                {clearButton}
               </div>
             </div>
           </section>

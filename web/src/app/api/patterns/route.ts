@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
   const offset = Math.max(0, parseInt(searchParams.get("offset") || "0") || 0);
 
   const where: Record<string, unknown> = {};
+  const andClauses: unknown[] = [];
 
   if (status) {
-    where.status = status;
+    andClauses.push({ status });
   }
 
   if (featured === "true") {
@@ -42,10 +43,8 @@ export async function GET(request: NextRequest) {
 
   if (tags) {
     const tagSlugs = tags.split(",").map((t) => t.trim()).filter(Boolean);
-    if (tagSlugs.length > 0) {
-      where.AND = tagSlugs.map((slug) => ({
-        tags: { some: { tag: { slug } } },
-      }));
+    for (const slug of tagSlugs) {
+      andClauses.push({ tags: { some: { tag: { slug } } } });
     }
   } else if (tag) {
     where.tags = {
@@ -68,14 +67,20 @@ export async function GET(request: NextRequest) {
   }
 
   if (search) {
-    where.OR = [
-      { title: { contains: search } },
-      { description: { contains: search } },
-      { authorName: { contains: search } },
-      { tags: { some: { tag: { name: { contains: search } } } } },
-      { library: { name: { contains: search } } },
-      { library: { team: { contains: search } } },
-    ];
+    andClauses.push({
+      OR: [
+        { title: { contains: search } },
+        { description: { contains: search } },
+        { authorName: { contains: search } },
+        { tags: { some: { tag: { name: { contains: search } } } } },
+        { library: { name: { contains: search } } },
+        { library: { team: { contains: search } } },
+      ],
+    });
+  }
+
+  if (andClauses.length > 0) {
+    where.AND = andClauses;
   }
 
   const [patterns, total] = await Promise.all([
@@ -96,7 +101,7 @@ export async function GET(request: NextRequest) {
 
   const patternsWithEffectiveStatus = patterns.map((p) => ({
     ...p,
-    effectiveStatus: p.status || p.library?.status || "community",
+    effectiveStatus: p.status || "concept",
   }));
 
   return NextResponse.json({ patterns: patternsWithEffectiveStatus, total, limit, offset });

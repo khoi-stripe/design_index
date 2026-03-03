@@ -66,9 +66,9 @@ export function Updater({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string | null>(null);
-  const [libraries, setLibraries] = useState<{ id: string; name: string; slug: string; team: string; status: string; description: string }[]>([]);
+  const [libraries, setLibraries] = useState<{ id: string; name: string; slug: string; status: string; description: string }[]>([]);
   const [selectedLibraryId, setSelectedLibraryId] = useState("");
-  const [patternStatus, setPatternStatus] = useState("");
+  const [patternStatus, setPatternStatus] = useState("concept");
   const statusTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const tags = useTags(user?.name);
@@ -407,31 +407,11 @@ export function Updater({
             onChange={(e) => setSelectedLibraryId(e.target.value)}
           >
             <option value="">None</option>
-            {Array.from(new Set(libraries.map((l) => l.team)))
-              .filter(Boolean)
-              .sort()
-              .map((team) => (
-                <optgroup key={team} label={team}>
-                  {libraries
-                    .filter((l) => l.team === team)
-                    .map((lib) => (
-                      <option key={lib.id} value={lib.id}>
-                        {lib.name}
-                      </option>
-                    ))}
-                </optgroup>
-              ))}
-            {libraries.some((l) => !l.team) && (
-              <optgroup label="Other">
-                {libraries
-                  .filter((l) => !l.team)
-                  .map((lib) => (
-                    <option key={lib.id} value={lib.id}>
-                      {lib.name}
-                    </option>
-                  ))}
-              </optgroup>
-            )}
+            {libraries.map((lib) => (
+              <option key={lib.id} value={lib.id}>
+                {lib.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -454,16 +434,15 @@ export function Updater({
         </div>
 
         <div className="field">
-          <label className="label">Status <span style={{ fontWeight: "normal", color: "var(--color-text-secondary)" }}>optional</span></label>
+          <label className="label">Status</label>
           <select
             className="input"
             value={patternStatus}
             onChange={(e) => setPatternStatus(e.target.value)}
           >
-            <option value="">Inherit from library</option>
-            <option value="official">Official</option>
-            <option value="community">In-use</option>
             <option value="concept">Concept</option>
+            <option value="in-use">In-use</option>
+            <option value="official">Official</option>
           </select>
         </div>
 

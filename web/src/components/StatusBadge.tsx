@@ -12,7 +12,7 @@ const statusStyles: Record<string, StatusDef> = {
     dark: { bg: "bg-[rgba(103,93,255,0.12)]", text: "text-[#675DFF]" },
     light: { bg: "bg-[#675DFF]", text: "text-white" },
   },
-  community: {
+  "in-use": {
     label: "In-use",
     dark: { bg: "bg-[rgba(68,207,149,0.12)]", text: "text-[#3ECF8E]" },
     light: { bg: "bg-[#3ECF8E]", text: "text-white" },

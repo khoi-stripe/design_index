@@ -6,7 +6,7 @@ import type { Library } from "@/lib/types";
 
 const STATUS_OPTIONS = [
   { value: "official", label: "Official" },
-  { value: "community", label: "In-use" },
+  { value: "in-use", label: "In-use" },
   { value: "concept", label: "Concept" },
 ] as const;
 
@@ -27,7 +27,7 @@ export default function LibrariesPage() {
   const [formName, setFormName] = useState("");
   const [formTeam, setFormTeam] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [formStatus, setFormStatus] = useState<string>("community");
+  const [formStatus, setFormStatus] = useState<string>("concept");
   const [formError, setFormError] = useState<string | null>(null);
 
   const fetchLibraries = useCallback(async () => {
@@ -54,7 +54,7 @@ export default function LibrariesPage() {
     setFormName("");
     setFormTeam("");
     setFormDescription("");
-    setFormStatus("community");
+    setFormStatus("concept");
     setFormError(null);
     setShowModal(true);
   };
@@ -64,7 +64,7 @@ export default function LibrariesPage() {
     setFormName(lib.name);
     setFormTeam(lib.team || "");
     setFormDescription(lib.description || "");
-    setFormStatus(lib.status || "community");
+    setFormStatus(lib.status || "concept");
     setFormError(null);
     setShowModal(true);
   };
@@ -260,7 +260,7 @@ export default function LibrariesPage() {
                             {lib.team || "—"}
                           </span>
                           <span className="inline-block px-2.5 py-0.5 text-[11px] font-medium bg-accent/15 text-accent rounded-[4px] capitalize">
-                            {lib.status || "community"}
+                            {lib.status || "concept"}
                           </span>
                           <span className="text-xs text-muted">
                             {lib._count?.patterns ?? 0} pattern{(lib._count?.patterns ?? 0) !== 1 ? "s" : ""}

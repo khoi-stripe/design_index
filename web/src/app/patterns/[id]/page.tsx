@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { MetadataChip } from "@/components/MetadataChip";
+import { MetadataChip, LibraryIcon } from "@/components/MetadataChip";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UpvoteButton } from "@/components/UpvoteButton";
 import { slugify } from "@/lib/utils";
@@ -536,6 +536,13 @@ export default function PatternDetailPage() {
               className="relative rounded-xl border border-border overflow-hidden group w-full h-[70vh] max-h-[800px] transition-colors duration-300"
               style={{ backgroundColor: allImages[activeImageIndex]?.dominantColor || "var(--surface)" }}
             >
+              {pattern.category && (
+                <div className="absolute top-3 left-3 z-10">
+                  <span className={`px-2 py-[2px] text-[11px] font-medium rounded-[3px] whitespace-nowrap capitalize ${useDarkArrows ? "bg-black/60 text-white" : "bg-white/70 text-black"}`}>
+                    {pattern.category}
+                  </span>
+                </div>
+              )}
               {allImages.length > 0 ? (
                 <Image
                   src={allImages[activeImageIndex]?.url || displayScreenshot}
@@ -698,7 +705,7 @@ export default function PatternDetailPage() {
                     >
                       <option value="">Inherit from library</option>
                       <option value="official">Official</option>
-                      <option value="community">In-use</option>
+                      <option value="in-use">In-use</option>
                       <option value="concept">Concept</option>
                     </select>
                   </div>
@@ -945,17 +952,13 @@ export default function PatternDetailPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {pattern.category && (
-                    <div>
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Type</h3>
-                      <MetadataChip label={pattern.category} />
-                    </div>
-                  )}
-
-                  {displayTags.length > 0 && (
+                  {(pattern.library || displayTags.length > 0) && (
                     <div>
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Tags</h3>
                       <div className="flex flex-wrap gap-1.5">
+                        {pattern.library && (
+                          <MetadataChip label={pattern.library.name} href={`/libraries/${pattern.library.slug}`} icon={<LibraryIcon />} />
+                        )}
                         {displayTags.map(({ tag }) => (
                           <Tag key={tag.id} label={tag.name} href={`/?tag=${encodeURIComponent(tag.slug)}`} />
                         ))}
