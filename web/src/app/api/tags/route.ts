@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 import { slugify } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
   });
 
   const sorted = tags
-    .map((tag) => ({
+    .map((tag: any) => ({
       id: tag.id,
       name: tag.name,
       slug: tag.slug,
@@ -35,12 +36,13 @@ export async function GET(request: NextRequest) {
       _count: tag._count,
       latestAt: tag.patterns[0]?.pattern.createdAt ?? new Date(0),
     }))
-    .sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
+    .sort((a: any, b: any) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
 
   return NextResponse.json(sorted);
 }
 
 export async function POST(request: NextRequest) {
+  const guard = demoGuard(); if (guard) return guard;
   let body;
   try {
     body = await request.json();

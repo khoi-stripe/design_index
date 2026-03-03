@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id: patternId } = await params;
   let body;
   try {

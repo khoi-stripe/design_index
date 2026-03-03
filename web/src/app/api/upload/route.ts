@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuid } from "uuid";
 import { processAndStoreImage } from "@/lib/image";
+import { demoGuard } from "@/lib/demo-guard";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
 
 export async function POST(request: NextRequest) {
+  const guard = demoGuard(); if (guard) return guard;
   const formData = await request.formData();
   const file = formData.get("file");
 

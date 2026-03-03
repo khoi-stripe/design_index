@@ -89,8 +89,15 @@ type RelatedPattern = {
   authorAvatar: string;
   figmaDeepLink: string;
   featured: boolean;
+  category: string;
+  status: string;
+  effectiveStatus: string;
+  libraryId: string | null;
+  library?: Library | null;
   createdAt: string;
   tags: { tag: Tag }[];
+  images?: PatternImage[];
+  _count?: { upvotes: number };
 };
 
 type OrderableImage = {

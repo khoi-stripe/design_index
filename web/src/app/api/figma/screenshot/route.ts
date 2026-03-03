@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuid } from "uuid";
 import { processAndStoreImage } from "@/lib/image";
+import { demoGuard } from "@/lib/demo-guard";
 
 function parseFigmaUrl(url: string): { fileKey: string; nodeId: string } | null {
   const fileMatch = url.match(
@@ -18,6 +19,7 @@ function parseFigmaUrl(url: string): { fileKey: string; nodeId: string } | null 
 }
 
 export async function POST(request: NextRequest) {
+  const guard = demoGuard(); if (guard) return guard;
   let body;
   try {
     body = await request.json();

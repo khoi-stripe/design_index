@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 import { ensureTags } from "@/lib/tags";
 
 export async function GET(request: NextRequest) {
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
     prisma.pattern.count({ where }),
   ]);
 
-  const patternsWithEffectiveStatus = patterns.map((p) => ({
+  const patternsWithEffectiveStatus = patterns.map((p: any) => ({
     ...p,
     effectiveStatus: p.status || "concept",
   }));
@@ -108,6 +109,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = demoGuard(); if (guard) return guard;
   let body;
   try {
     body = await request.json();

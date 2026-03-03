@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 
 function slugify(str: string): string {
   return str
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = demoGuard(); if (guard) return guard;
   let body;
   try {
     body = await request.json();

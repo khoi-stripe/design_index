@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 import { ensureTags } from "@/lib/tags";
 
 const FIGMA_SCREENSHOT_URL = "/api/figma/screenshot";
@@ -8,6 +9,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id } = await params;
   let body;
   try {
@@ -105,6 +107,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { searchParams } = new URL(request.url);
   const versionId = searchParams.get("versionId");
 

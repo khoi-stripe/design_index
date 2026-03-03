@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 
 export async function GET(
   _request: NextRequest,
@@ -23,6 +24,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id } = await params;
   let body;
   try {
@@ -51,6 +53,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id } = await params;
 
   await prisma.library.delete({ where: { id } });

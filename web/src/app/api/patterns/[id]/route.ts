@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { demoGuard } from "@/lib/demo-guard";
 import { ensureTags } from "@/lib/tags";
 
 export async function GET(
@@ -43,7 +44,7 @@ export async function GET(
       id: { not: id },
       tags: {
         some: {
-          tagId: { in: pattern.tags.map((t) => t.tagId) },
+          tagId: { in: pattern.tags.map((t: any) => t.tagId) },
         },
       },
     },
@@ -63,6 +64,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id } = await params;
   let body;
   try {
@@ -101,6 +103,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id } = await params;
   let body;
   try {
@@ -132,7 +135,7 @@ export async function PATCH(
 
   // If a non-primary image was moved to first position, swap it with the primary
   if (newFirstId !== "primary") {
-    const promoted = patternRecord.images.find((img) => img.id === newFirstId);
+    const promoted = patternRecord.images.find((img: any) => img.id === newFirstId);
     if (promoted) {
       const oldPrimary = {
         screenshotUrl: patternRecord.screenshotUrl,
@@ -182,6 +185,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = demoGuard(); if (guard) return guard;
   const { id } = await params;
 
   await prisma.pattern.delete({ where: { id } });
