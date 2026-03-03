@@ -65,10 +65,12 @@ export type ProtoLayout = "current" | "planned";
 const STORAGE_KEY = "proto-layout";
 
 export function useProtoLayout(): [ProtoLayout, (v: ProtoLayout) => void] {
-  const [layout, setLayout] = useState<ProtoLayout>(() => {
-    if (typeof window === "undefined") return "current";
-    return (localStorage.getItem(STORAGE_KEY) as ProtoLayout) || "current";
-  });
+  const [layout, setLayout] = useState<ProtoLayout>("current");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) as ProtoLayout | null;
+    if (stored && stored !== "current") setLayout(stored);
+  }, []);
 
   const update = useCallback((v: ProtoLayout) => {
     setLayout(v);
