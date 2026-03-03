@@ -158,4 +158,14 @@ figma.ui.onmessage = async (msg) => {
       },
     });
   }
+
+  if (msg.type === "get-library-id") {
+    const libraryId = figma.root.getPluginData("libraryId") || "";
+    figma.ui.postMessage({ type: "library-id", data: libraryId });
+  }
+
+  if (msg.type === "set-library-id") {
+    figma.root.setPluginData("libraryId", msg.data || "");
+    figma.ui.postMessage({ type: "library-id", data: figma.root.getPluginData("libraryId") || "" });
+  }
 };

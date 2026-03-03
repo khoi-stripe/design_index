@@ -21,14 +21,10 @@
   --foreground: var(--neutral-300);
   --foreground-bright: var(--neutral-100);
   --accent: #533AFD;
-  --accent-light: #4E11E2;
-  --accent-bg: #1a1830;
-  --border: #2a2a3d;
+  --accent-hover: #4E11E2;
+  --border: var(--neutral-900);
   --muted: var(--neutral-500);
   --card-bg: #000000;
-  --card-hover: #0a0a0f;
-  --tag-bg: #533AFD;
-  --tag-text: var(--neutral-0);
   --surface: #131318;
   --surface-hover: var(--neutral-900);
 }
@@ -54,14 +50,10 @@
   --color-foreground: var(--foreground);
   --color-foreground-bright: var(--foreground-bright);
   --color-accent: var(--accent);
-  --color-accent-light: var(--accent-light);
-  --color-accent-bg: var(--accent-bg);
+  --color-accent-hover: var(--accent-hover);
   --color-border: var(--border);
   --color-muted: var(--muted);
   --color-card-bg: var(--card-bg);
-  --color-card-hover: var(--card-hover);
-  --color-tag-bg: var(--tag-bg);
-  --color-tag-text: var(--tag-text);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --font-sans: var(--font-geist-sans);
@@ -159,12 +151,12 @@ body {
   font-weight: 600;
 }
 .rdp-dark .rdp-day_range_middle {
-  background: rgba(83, 58, 253, 0.12) !important;
+  background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
   color: var(--foreground-bright) !important;
   position: relative;
 }
 .rdp-dark .rdp-day_range_middle:hover {
-  background: rgba(83, 58, 253, 0.2) !important;
+  background: color-mix(in srgb, var(--accent) 20%, transparent) !important;
 }
 .rdp-dark .rdp-day_disabled {
   color: var(--muted) !important;

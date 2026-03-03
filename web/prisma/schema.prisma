@@ -7,6 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Library {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  team        String   @default("")
+  description String   @default("")
+  status      String   @default("community")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patterns Pattern[]
+}
+
 model Pattern {
   id            String   @id @default(uuid())
   title         String
@@ -21,15 +34,18 @@ model Pattern {
   authorName    String   @default("")
   authorAvatar  String   @default("")
   category      String   @default("flow")
-  status        String   @default("published")
+  status        String   @default("")
   featured      Boolean  @default(false)
+  libraryId     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  library            Library?             @relation(fields: [libraryId], references: [id], onDelete: SetNull)
   tags               PatternTag[]
   versions           PatternVersion[]
   images             PatternImage[]
   collectionPatterns CollectionPattern[]
+  upvotes            Upvote[]
 }
 
 model PatternImage {
@@ -109,4 +125,15 @@ model CollectionPattern {
   pattern      Pattern    @relation(fields: [patternId], references: [id], onDelete: Cascade)
 
   @@id([collectionId, patternId])
+}
+
+model Upvote {
+  id        String   @id @default(uuid())
+  patternId String
+  visitorId String
+  createdAt DateTime @default(now())
+
+  pattern Pattern @relation(fields: [patternId], references: [id], onDelete: Cascade)
+
+  @@unique([patternId, visitorId])
 }

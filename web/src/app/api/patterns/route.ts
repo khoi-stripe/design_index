@@ -9,8 +9,10 @@ export async function GET(request: NextRequest) {
   const author = searchParams.get("author");
   const category = searchParams.get("category");
   const search = searchParams.get("search");
-  const status = searchParams.get("status") || "published";
+  const status = searchParams.get("status");
   const featured = searchParams.get("featured");
+  const libraryId = searchParams.get("libraryId");
+  const team = searchParams.get("team");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "50") || 50));
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   const where: Record<string, unknown> = {};
 
-  if (status !== "all") {
+  if (status) {
     where.status = status;
   }
 
@@ -28,6 +30,14 @@ export async function GET(request: NextRequest) {
 
   if (category) {
     where.category = category;
+  }
+
+  if (libraryId) {
+    where.libraryId = libraryId;
+  }
+
+  if (team) {
+    where.library = { team };
   }
 
   if (tags) {
@@ -63,6 +73,8 @@ export async function GET(request: NextRequest) {
       { description: { contains: search } },
       { authorName: { contains: search } },
       { tags: { some: { tag: { name: { contains: search } } } } },
+      { library: { name: { contains: search } } },
+      { library: { team: { contains: search } } },
     ];
   }
 
@@ -72,6 +84,8 @@ export async function GET(request: NextRequest) {
       include: {
         tags: { include: { tag: true } },
         images: { orderBy: { sortOrder: "asc" } },
+        library: true,
+        _count: { select: { upvotes: true } },
       },
       orderBy: { createdAt: "desc" },
       take: limit,
@@ -80,7 +94,12 @@ export async function GET(request: NextRequest) {
     prisma.pattern.count({ where }),
   ]);
 
-  return NextResponse.json({ patterns, total, limit, offset });
+  const patternsWithEffectiveStatus = patterns.map((p) => ({
+    ...p,
+    effectiveStatus: p.status || p.library?.status || "community",
+  }));
+
+  return NextResponse.json({ patterns: patternsWithEffectiveStatus, total, limit, offset });
 }
 
 export async function POST(request: NextRequest) {
@@ -90,7 +109,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, dominantColor, authorName, authorAvatar, tags, category, additionalImages } = body;
+  const { title, description, figmaFileKey, figmaNodeId, figmaPageName, screenshotUrl, thumbnailUrl, dominantColor, authorName, authorAvatar, tags, category, additionalImages, libraryId, status } = body;
 
   if (!title) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -108,6 +127,7 @@ export async function POST(request: NextRequest) {
       title,
       description: description || "",
       category: category || "flow",
+      status: status || "",
       dominantColor: dominantColor || "",
       figmaFileKey: figmaFileKey || "",
       figmaNodeId: figmaNodeId || "",
@@ -117,11 +137,12 @@ export async function POST(request: NextRequest) {
       thumbnailUrl: thumbnailUrl || screenshotUrl || "",
       authorName: authorName || "",
       authorAvatar: authorAvatar || "",
+      libraryId: libraryId || null,
       tags: resolvedTags.length
         ? { create: resolvedTags.map((t) => ({ tagId: t.tagId })) }
         : undefined,
     },
-    include: { tags: { include: { tag: true } } },
+    include: { tags: { include: { tag: true } }, library: true },
   });
 
   await prisma.patternVersion.create({

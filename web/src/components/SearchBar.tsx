@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Tag } from "@/components/Tag";
 
 type Suggestion = {
   type: string;
@@ -113,7 +114,7 @@ export function SearchBar({
   return (
     <div className="w-[600px] max-w-full relative" ref={containerRef}>
       <div
-        className="flex items-center gap-1.5 min-h-[36px] bg-surface rounded-lg transition-all border border-transparent focus-within:bg-black focus-within:border-border cursor-text"
+        className="flex items-center gap-1.5 min-h-[36px] bg-surface rounded-lg transition-all border border-transparent focus-within:bg-card-bg focus-within:border-border cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
         <svg
@@ -132,19 +133,7 @@ export function SearchBar({
         </svg>
 
         {filters.map((f, i) => (
-          <button
-            key={`${f.type}-${f.value}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              removeFilter(i);
-            }}
-            className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[11px] font-medium bg-accent text-white rounded-[4px] shrink-0 whitespace-nowrap hover:bg-accent-light transition-colors cursor-pointer"
-          >
-            {f.label}
-            <svg width="10" height="10" viewBox="0 0 10 10" className="ml-0.5">
-              <path d="M7.5 2.5L2.5 7.5M2.5 2.5L7.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
+          <Tag key={`${f.type}-${f.value}`} label={f.label} onRemove={() => removeFilter(i)} />
         ))}
 
         <input
@@ -159,7 +148,7 @@ export function SearchBar({
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={filters.length > 0 ? "Add more..." : "Search patterns, tags, contributors..."}
-          className="flex-1 min-w-[120px] h-9 pr-9 text-sm bg-transparent text-foreground outline-none placeholder:text-muted/60"
+          className="flex-1 min-w-[120px] h-9 pr-9 text-sm bg-transparent text-foreground outline-none placeholder:text-neutral-500"
         />
 
         {(value || filters.length > 0) && (

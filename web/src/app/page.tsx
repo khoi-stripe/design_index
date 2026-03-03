@@ -8,6 +8,7 @@ import { clearBreadcrumbTrail } from "@/components/Breadcrumb";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
+import type { Pattern, Library } from "@/lib/types";
 
 const CATEGORIES = [
   { value: null, label: "All" },
@@ -17,34 +18,20 @@ const CATEGORIES = [
   { value: "asset", label: "Assets" },
 ] as const;
 
-type PatternTag = { tag: { id: string; name: string; slug: string } };
-type PatternImage = {
-  id: string;
-  screenshotUrl: string;
-  thumbnailUrl: string;
-  dominantColor: string;
-};
-type Pattern = {
-  id: string;
-  title: string;
-  description: string;
-  screenshotUrl: string;
-  thumbnailUrl: string;
-  dominantColor: string;
-  authorName: string;
-  authorAvatar: string;
-  figmaDeepLink: string;
-  featured: boolean;
-  createdAt: string;
-  category: string;
-  tags: PatternTag[];
-  images: PatternImage[];
-};
+const STATUS_OPTIONS = [
+  { value: null, label: "All" },
+  { value: "concept", label: "Concept" },
+  { value: "community", label: "Community" },
+  { value: "official", label: "Official" },
+] as const;
 
 export default function HomePage() {
   const searchParams = useSearchParams();
   const [patterns, setPatterns] = useState<Pattern[]>([]);
+  const [libraries, setLibraries] = useState<Library[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeLibrary, setActiveLibrary] = useState<string | null>(null);
+  const [activeStatus, setActiveStatus] = useState<string | null>(null);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [filters, setFilters] = useState<SearchFilter[]>(() => {
     const tagParam = searchParams.get("tag");
@@ -57,46 +44,111 @@ export default function HomePage() {
   const [total, setTotal] = useState(0);
   const PAGE_SIZE = 24;
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // undefined = "All time"
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [menuClosing, setMenuClosing] = useState(false);
+  const [showTypeMenu, setShowTypeMenu] = useState(false);
+  const [, setTypeMenuVisible] = useState(false);
+  const [typeMenuClosing, setTypeMenuClosing] = useState(false);
+  const [showLibraryMenu, setShowLibraryMenu] = useState(false);
+  const [, setLibraryMenuVisible] = useState(false);
+  const [libraryMenuClosing, setLibraryMenuClosing] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [, setStatusMenuVisible] = useState(false);
+  const [statusMenuClosing, setStatusMenuClosing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [filterSticky, setFilterSticky] = useState(true);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const typeMenuRef = useRef<HTMLDivElement>(null);
+  const libraryMenuRef = useRef<HTMLDivElement>(null);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
 
-  const openMenu = () => {
-    setShowDatePicker(false);
-    setMenuVisible(true);
-    setMenuClosing(false);
-    setShowFilterMenu(true);
+  const closeAllMenus = () => {
+    if (showTypeMenu) closeTypeMenu();
+    if (showLibraryMenu) closeLibraryMenu();
+    if (showStatusMenu) closeStatusMenu();
   };
 
-  const closeMenu = () => {
-    setMenuClosing(true);
+  const openTypeMenu = () => {
+    setShowDatePicker(false);
+    if (showLibraryMenu) closeLibraryMenu();
+    if (showStatusMenu) closeStatusMenu();
+    setTypeMenuVisible(true);
+    setTypeMenuClosing(false);
+    setShowTypeMenu(true);
+  };
+
+  const closeTypeMenu = () => {
+    setTypeMenuClosing(true);
     setTimeout(() => {
-      setShowFilterMenu(false);
-      setMenuVisible(false);
-      setMenuClosing(false);
+      setShowTypeMenu(false);
+      setTypeMenuVisible(false);
+      setTypeMenuClosing(false);
     }, 150);
   };
 
-  const toggleMenu = () => {
-    if (showFilterMenu && !menuClosing) {
-      closeMenu();
-    } else if (!showFilterMenu) {
-      openMenu();
-    }
+  const toggleTypeMenu = () => {
+    if (showTypeMenu && !typeMenuClosing) closeTypeMenu();
+    else if (!showTypeMenu) openTypeMenu();
+  };
+
+  const openLibraryMenu = () => {
+    setShowDatePicker(false);
+    if (showTypeMenu) closeTypeMenu();
+    if (showStatusMenu) closeStatusMenu();
+    setLibraryMenuVisible(true);
+    setLibraryMenuClosing(false);
+    setShowLibraryMenu(true);
+  };
+
+  const closeLibraryMenu = () => {
+    setLibraryMenuClosing(true);
+    setTimeout(() => {
+      setShowLibraryMenu(false);
+      setLibraryMenuVisible(false);
+      setLibraryMenuClosing(false);
+    }, 150);
+  };
+
+  const toggleLibraryMenu = () => {
+    if (showLibraryMenu && !libraryMenuClosing) closeLibraryMenu();
+    else if (!showLibraryMenu) openLibraryMenu();
+  };
+
+  const openStatusMenu = () => {
+    setShowDatePicker(false);
+    if (showTypeMenu) closeTypeMenu();
+    if (showLibraryMenu) closeLibraryMenu();
+    setStatusMenuVisible(true);
+    setStatusMenuClosing(false);
+    setShowStatusMenu(true);
+  };
+
+  const closeStatusMenu = () => {
+    setStatusMenuClosing(true);
+    setTimeout(() => {
+      setShowStatusMenu(false);
+      setStatusMenuVisible(false);
+      setStatusMenuClosing(false);
+    }, 150);
+  };
+
+  const toggleStatusMenu = () => {
+    if (showStatusMenu && !statusMenuClosing) closeStatusMenu();
+    else if (!showStatusMenu) openStatusMenu();
   };
 
   const handleDatePickerOpenChange = (open: boolean) => {
-    if (open && showFilterMenu) closeMenu();
+    if (open) closeAllMenus();
     setShowDatePicker(open);
   };
 
   useEffect(() => {
     clearBreadcrumbTrail();
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/libraries")
+      .then((r) => r.json())
+      .then((data) => setLibraries(Array.isArray(data) ? data : []));
   }, []);
 
   useEffect(() => {
@@ -114,6 +166,8 @@ export default function HomePage() {
   const buildParams = useCallback((offset = 0) => {
     const params = new URLSearchParams();
     if (activeCategory) params.set("category", activeCategory);
+    if (activeLibrary) params.set("libraryId", activeLibrary);
+    if (activeStatus) params.set("status", activeStatus);
     if (search) params.set("search", search);
     const tagFilters = filters.filter((f) => f.type === "tag");
     const authorFilter = filters.find((f) => f.type === "author");
@@ -124,7 +178,7 @@ export default function HomePage() {
     params.set("limit", String(PAGE_SIZE));
     params.set("offset", String(offset));
     return params;
-  }, [activeCategory, search, filters, dateRange]);
+  }, [activeCategory, activeLibrary, activeStatus, search, filters, dateRange]);
 
   const fetchPatterns = useCallback(async () => {
     setLoading(true);
@@ -151,6 +205,21 @@ export default function HomePage() {
   }, [fetchPatterns, search]);
 
   useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) fetchPatterns();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchPatterns();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [fetchPatterns]);
+
+  useEffect(() => {
     let filterNaturalTop = 0;
     const measure = () => {
       if (filterRef.current) {
@@ -167,9 +236,15 @@ export default function HomePage() {
       const shouldShow = !isStuck || scrollingUp;
       setFilterSticky(shouldShow);
       if (!shouldShow) {
-        setShowFilterMenu(false);
-        setMenuVisible(false);
-        setMenuClosing(false);
+        setShowTypeMenu(false);
+        setTypeMenuVisible(false);
+        setTypeMenuClosing(false);
+        setShowLibraryMenu(false);
+        setLibraryMenuVisible(false);
+        setLibraryMenuClosing(false);
+        setShowStatusMenu(false);
+        setStatusMenuVisible(false);
+        setStatusMenuClosing(false);
         setShowDatePicker(false);
       }
       lastScrollY.current = y;
@@ -184,6 +259,18 @@ export default function HomePage() {
 
   const activeCategoryLabel =
     CATEGORIES.find((c) => c.value === activeCategory)?.label || "All";
+  const activeLibraryLabel = activeLibrary
+    ? libraries.find((l) => l.id === activeLibrary)?.name ?? "Library"
+    : "All";
+  const activeStatusLabel =
+    STATUS_OPTIONS.find((s) => s.value === activeStatus)?.label || "All";
+
+  const librariesByTeam = libraries.reduce<Record<string, Library[]>>((acc, lib) => {
+    const team = lib.team || "Other";
+    if (!acc[team]) acc[team] = [];
+    acc[team].push(lib);
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-background">
@@ -215,6 +302,13 @@ export default function HomePage() {
           <div className="absolute left-1/2 -translate-x-1/2 top-3">
             <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} />
           </div>
+
+          <a
+            href="/libraries"
+            className="ml-auto text-xs text-muted hover:text-foreground transition-colors shrink-0"
+          >
+            Libraries
+          </a>
         </div>
       </header>
 
@@ -227,31 +321,27 @@ export default function HomePage() {
               filterSticky ? "translate-y-0" : "-translate-y-full"
             }`}
           >
-            {/* Left: Category filter + count */}
+            {/* Left: Filters + count */}
             <div className="flex items-center gap-1.5 flex-1">
+              {/* Type filter */}
               <div className="relative inline-block">
                 <button
-                  onClick={toggleMenu}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showFilterMenu ? "text-foreground bg-background border !border-border" : ""}`}
+                  onClick={toggleTypeMenu}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showTypeMenu ? "text-foreground bg-background border !border-border" : ""}`}
                 >
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M2 4h12M4 8h8M6 12h4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
+                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                   <span className="font-medium tracking-tight">
-                    Showing: {activeCategoryLabel}
+                    Type: {activeCategoryLabel}
                   </span>
                 </button>
 
-                {showFilterMenu && (
+                {showTypeMenu && (
                   <div
-                    ref={menuRef}
+                    ref={typeMenuRef}
                     className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
-                      menuClosing ? "menu-spring-exit" : "menu-spring-enter"
+                      typeMenuClosing ? "menu-spring-exit" : "menu-spring-enter"
                     }`}
                   >
                     {CATEGORIES.map((cat) => (
@@ -259,7 +349,7 @@ export default function HomePage() {
                         key={cat.label}
                         onClick={() => {
                           setActiveCategory(cat.value);
-                          closeMenu();
+                          closeTypeMenu();
                         }}
                         className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
                           activeCategory === cat.value
@@ -273,7 +363,108 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              <span className="text-xs text-muted">
+
+              {/* Library filter */}
+              <div className="relative inline-block">
+                <button
+                  onClick={toggleLibraryMenu}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showLibraryMenu ? "text-foreground bg-background border !border-border" : ""}`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <span className="font-medium tracking-tight">
+                    Library: {activeLibraryLabel}
+                  </span>
+                </button>
+
+                {showLibraryMenu && (
+                  <div
+                    ref={libraryMenuRef}
+                    className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-56 max-h-64 overflow-y-auto shadow-lg ${
+                      libraryMenuClosing ? "menu-spring-exit" : "menu-spring-enter"
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        setActiveLibrary(null);
+                        closeLibraryMenu();
+                      }}
+                      className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
+                        !activeLibrary ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"
+                      }`}
+                    >
+                      All
+                    </button>
+                    {Object.entries(librariesByTeam).map(([team, libs]) => (
+                      <div key={team}>
+                        {Object.keys(librariesByTeam).length > 1 && (
+                          <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted/70 mt-2 first:mt-0">
+                            {team}
+                          </div>
+                        )}
+                        {libs.map((lib) => (
+                          <button
+                            key={lib.id}
+                            onClick={() => {
+                              setActiveLibrary(lib.id);
+                              closeLibraryMenu();
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
+                              activeLibrary === lib.id ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"
+                            }`}
+                          >
+                            {lib.name}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Status filter */}
+              <div className="relative inline-block">
+                <button
+                  onClick={toggleStatusMenu}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showStatusMenu ? "text-foreground bg-background border !border-border" : ""}`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <span className="font-medium tracking-tight">
+                    Status: {activeStatusLabel}
+                  </span>
+                </button>
+
+                {showStatusMenu && (
+                  <div
+                    ref={statusMenuRef}
+                    className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
+                      statusMenuClosing ? "menu-spring-exit" : "menu-spring-enter"
+                    }`}
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.label}
+                        onClick={() => {
+                          setActiveStatus(opt.value);
+                          closeStatusMenu();
+                        }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
+                          activeStatus === opt.value
+                            ? "bg-accent text-white font-medium"
+                            : "text-foreground hover:bg-surface-hover"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <span className="text-xs text-muted py-1 px-2">
                 {loading ? "..." : patterns.length}
               </span>
             </div>

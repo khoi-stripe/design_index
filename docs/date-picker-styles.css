@@ -1,0 +1,137 @@
+/* Sail-styled overrides for react-day-picker */
+/* Add this to your globals.css */
+
+.sail-date-picker {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #635bff; /* Sail primary color */
+  --rdp-background-color: rgba(99, 91, 255, 0.1);
+
+  font-family: theme('fontFamily.sail');
+}
+
+/* Month caption */
+.sail-date-picker .rdp-caption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--sail-space-100) 0;
+  margin-bottom: var(--sail-space-100);
+}
+
+.sail-date-picker .rdp-caption_label {
+  font-size: theme('fontSize.sail-base');
+  font-weight: 600;
+  color: var(--sail-color-text);
+}
+
+/* Navigation buttons */
+.sail-date-picker .rdp-nav_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: theme('borderRadius.sail-md');
+  border: none;
+  background: transparent;
+  color: var(--sail-color-text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.sail-date-picker .rdp-nav_button:hover {
+  background-color: var(--sail-color-background-secondary);
+  color: var(--sail-color-text);
+}
+
+.sail-date-picker .rdp-nav_button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Weekday headers */
+.sail-date-picker .rdp-head_cell {
+  font-size: theme('fontSize.sail-xs');
+  font-weight: 600;
+  color: var(--sail-color-text-secondary);
+  text-transform: uppercase;
+  padding: var(--sail-space-50);
+}
+
+/* Day cells */
+.sail-date-picker .rdp-cell {
+  padding: 2px;
+}
+
+.sail-date-picker .rdp-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  border-radius: theme('borderRadius.sail-md');
+  font-size: theme('fontSize.sail-sm');
+  color: var(--sail-color-text);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.sail-date-picker .rdp-day:hover:not(.rdp-day_selected):not(.rdp-day_disabled) {
+  background-color: var(--sail-color-background-secondary);
+}
+
+/* Selected day */
+.sail-date-picker .rdp-day_selected {
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+/* Range selection */
+.sail-date-picker .rdp-day_range_start,
+.sail-date-picker .rdp-day_range_end {
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
+}
+
+.sail-date-picker .rdp-day_range_middle {
+  background-color: var(--rdp-background-color) !important;
+  color: var(--sail-color-text) !important;
+  border-radius: 0;
+}
+
+/* Today */
+.sail-date-picker .rdp-day_today:not(.rdp-day_selected) {
+  font-weight: 600;
+  color: var(--rdp-accent-color);
+}
+
+/* Disabled days */
+.sail-date-picker .rdp-day_disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sail-date-picker .rdp-day_disabled:hover {
+  background-color: transparent;
+}
+
+/* Outside current month */
+.sail-date-picker .rdp-day_outside {
+  color: var(--sail-color-text-tertiary);
+  opacity: 0.5;
+}
+
+/* Remove default focus outline, use Sail focus ring */
+.sail-date-picker .rdp-day:focus-visible {
+  outline: 2px solid var(--rdp-accent-color);
+  outline-offset: 2px;
+}
+
+/* Dark mode adjustments */
+.dark .sail-date-picker {
+  --rdp-background-color: rgba(99, 91, 255, 0.2);
+}

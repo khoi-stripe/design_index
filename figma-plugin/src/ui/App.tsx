@@ -26,6 +26,7 @@ function extractFileKey(url: string): string | null {
 export default function App() {
   const [selections, setSelections] = useState<SelectionNode[]>([]);
   const [fileKey, setFileKey] = useState<string>("");
+  const [libraryId, setLibraryId] = useState<string>("");
   const [user, setUser] = useState<UserData | null>(null);
   const [fileUrlInput, setFileUrlInput] = useState("");
   const [fileKeyError, setFileKeyError] = useState("");
@@ -47,6 +48,9 @@ export default function App() {
       }
       if (msg.type === "file-key") {
         setFileKey(msg.data || "");
+      }
+      if (msg.type === "library-id") {
+        setLibraryId(msg.data || "");
       }
       if (msg.type === "user") {
         setUser(msg.data);
@@ -145,6 +149,7 @@ export default function App() {
               selections={selections}
               fileKey={fileKey}
               user={user}
+              libraryId={libraryId}
             />
           ) : (
             <Updater

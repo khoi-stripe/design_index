@@ -11,7 +11,7 @@ function LoadingSkeletons({ count = 9 }: { count?: number }) {
         <div key={i} className="animate-pulse">
           <div className="rounded-[4px] overflow-hidden">
             <div className="aspect-square bg-surface" />
-            <div className="bg-black p-4 space-y-2">
+            <div className="bg-card-bg p-4 space-y-2">
               <div className="h-4 bg-surface rounded w-3/4" />
               <div className="flex gap-1">
                 <div className="h-5 bg-surface rounded w-16" />

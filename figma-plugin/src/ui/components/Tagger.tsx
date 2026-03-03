@@ -1,25 +1,32 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { uploadScreenshot, createPattern } from "../api";
+import { uploadScreenshot, createPattern, fetchLibraries } from "../api";
 import { CATEGORIES } from "../shared/constants";
 import { useTags } from "../hooks/useTags";
 import type { SelectionNode } from "../App";
 import type { UserData, CapturedImage } from "../shared/types";
 
+type Library = { id: string; name: string; slug: string; team: string; status: string; description: string };
+
 export function Tagger({
   selections,
   fileKey,
   user,
+  libraryId: savedLibraryId,
   onBack,
 }: {
   selections: SelectionNode[];
   fileKey: string;
   user: UserData | null;
+  libraryId?: string;
   onBack?: () => void;
 }) {
   const primary = selections[0];
   const [title, setTitle] = useState(primary.existingMeta?.title || primary.name);
   const [description, setDescription] = useState(primary.existingMeta?.description || "");
   const [category, setCategory] = useState<string | null>(null);
+  const [libraries, setLibraries] = useState<Library[]>([]);
+  const [selectedLibraryId, setSelectedLibraryId] = useState("");
+  const [patternStatus, setPatternStatus] = useState("");
   const statusTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const [status, setStatus] = useState<"idle" | "capturing" | "uploading" | "saving" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -30,6 +37,18 @@ export function Tagger({
   useEffect(() => {
     return () => clearTimeout(statusTimeoutRef.current);
   }, []);
+
+  useEffect(() => {
+    fetchLibraries().then(setLibraries).catch(() => setLibraries([]));
+  }, []);
+
+  useEffect(() => {
+    parent.postMessage({ pluginMessage: { type: "get-library-id" } }, "*");
+  }, []);
+
+  useEffect(() => {
+    if (savedLibraryId) setSelectedLibraryId(savedLibraryId);
+  }, [savedLibraryId]);
 
   useEffect(() => {
     setTitle(primary.existingMeta?.title || primary.name);
@@ -131,6 +150,8 @@ export function Tagger({
         authorName: user?.name || "",
         authorAvatar: user?.photoUrl || "",
         tags: tags.selectedTags,
+        libraryId: selectedLibraryId || undefined,
+        status: patternStatus || undefined,
         additionalImages,
       });
 
@@ -148,7 +169,7 @@ export function Tagger({
       setStatus("error");
       setErrorMsg(e instanceof Error ? e.message : "Something went wrong");
     }
-  }, [title, description, category, tags.selectedTags, fileKey, selections, primary, user]);
+  }, [title, description, category, tags.selectedTags, fileKey, selections, primary, user, selectedLibraryId, patternStatus]);
 
   return (
     <div className="tagger">
@@ -189,19 +210,75 @@ export function Tagger({
         </div>
 
         <div className="field">
+          <label className="label">Library <span style={{ fontWeight: "normal", color: "var(--color-text-secondary)" }}>optional</span></label>
+          <select
+            className="input"
+            value={selectedLibraryId}
+            onChange={(e) => {
+              const id = e.target.value;
+              setSelectedLibraryId(id);
+              parent.postMessage({ pluginMessage: { type: "set-library-id", data: id } }, "*");
+            }}
+          >
+            <option value="">None</option>
+            {Array.from(new Set(libraries.map((l) => l.team)))
+              .filter(Boolean)
+              .sort()
+              .map((team) => (
+                <optgroup key={team} label={team}>
+                  {libraries
+                    .filter((l) => l.team === team)
+                    .map((lib) => (
+                      <option key={lib.id} value={lib.id}>
+                        {lib.name}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            {libraries.some((l) => !l.team) && (
+              <optgroup label="Other">
+                {libraries
+                  .filter((l) => !l.team)
+                  .map((lib) => (
+                    <option key={lib.id} value={lib.id}>
+                      {lib.name}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
+          </select>
+        </div>
+
+        <div className="field">
           <label className="label">Category</label>
-          <div className="category-selector">
+          <select
+            className="input"
+            value={category || ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setCategory(v || null);
+              setErrorMsg("");
+            }}
+          >
+            <option value="" disabled>Select category...</option>
             {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => { setCategory(cat.value); setErrorMsg(""); }}
-                className={`category-option ${category === cat.value ? "active" : ""}`}
-              >
-                <span className="category-label">{cat.label}</span>
-                <span className="category-desc">{cat.desc}</span>
-              </button>
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
-          </div>
+          </select>
+        </div>
+
+        <div className="field">
+          <label className="label">Status <span style={{ fontWeight: "normal", color: "var(--color-text-secondary)" }}>optional</span></label>
+          <select
+            className="input"
+            value={patternStatus}
+            onChange={(e) => setPatternStatus(e.target.value)}
+          >
+            <option value="">Inherit from library</option>
+            <option value="official">Official</option>
+            <option value="community">Community</option>
+            <option value="concept">Concept</option>
+          </select>
         </div>
 
         <div className="field">

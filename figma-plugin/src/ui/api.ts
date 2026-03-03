@@ -30,6 +30,8 @@ export async function createPattern(data: {
   authorName: string;
   authorAvatar: string;
   tags: string[];
+  libraryId?: string;
+  status?: string;
   additionalImages?: {
     screenshotUrl: string;
     thumbnailUrl: string;
@@ -47,6 +49,14 @@ export async function createPattern(data: {
   });
 
   if (!res.ok) throw new Error("Failed to create pattern");
+  return res.json();
+}
+
+export async function fetchLibraries(): Promise<
+  { id: string; name: string; slug: string; team: string; status: string; description: string }[]
+> {
+  const res = await fetch(`${API_BASE}/libraries`);
+  if (!res.ok) throw new Error("Failed to fetch libraries");
   return res.json();
 }
 
@@ -118,6 +128,8 @@ export async function updatePatternMeta(
     description?: string;
     category?: string;
     tags?: string[];
+    libraryId?: string;
+    status?: string;
   }
 ) {
   const res = await fetch(`${API_BASE}/patterns/${patternId}`, {

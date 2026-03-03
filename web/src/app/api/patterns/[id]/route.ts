@@ -17,6 +17,8 @@ export async function GET(
         include: { tags: { include: { tag: true } } },
       },
       images: { orderBy: { sortOrder: "asc" } },
+      library: true,
+      _count: { select: { upvotes: true } },
       collectionPatterns: {
         include: { collection: true },
       },
@@ -25,6 +27,15 @@ export async function GET(
 
   if (!pattern) {
     return NextResponse.json({ error: "Pattern not found" }, { status: 404 });
+  }
+
+  const visitorId = new URL(_request.url).searchParams.get("visitorId");
+  let upvotedByVisitor = false;
+  if (visitorId) {
+    const vote = await prisma.upvote.findUnique({
+      where: { patternId_visitorId: { patternId: id, visitorId } },
+    });
+    upvotedByVisitor = !!vote;
   }
 
   const relatedPatterns = await prisma.pattern.findMany({
@@ -36,11 +47,16 @@ export async function GET(
         },
       },
     },
-    include: { tags: { include: { tag: true } } },
+    include: { tags: { include: { tag: true } }, library: true },
     take: 6,
   });
 
-  return NextResponse.json({ pattern, relatedPatterns });
+  const effectiveStatus = pattern.status || pattern.library?.status || "community";
+
+  return NextResponse.json({
+    pattern: { ...pattern, effectiveStatus, upvotedByVisitor },
+    relatedPatterns,
+  });
 }
 
 export async function PUT(
@@ -54,7 +70,7 @@ export async function PUT(
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-  const { title, description, category, status, featured, tags } = body;
+  const { title, description, category, status, featured, tags, libraryId } = body;
 
   const updateData: Record<string, unknown> = {};
   if (title !== undefined) updateData.title = title;
@@ -62,6 +78,7 @@ export async function PUT(
   if (category !== undefined) updateData.category = category;
   if (status !== undefined) updateData.status = status;
   if (featured !== undefined) updateData.featured = featured;
+  if (libraryId !== undefined) updateData.libraryId = libraryId || null;
 
   if (tags) {
     await prisma.patternTag.deleteMany({ where: { patternId: id } });

@@ -1,0 +1,28 @@
+---
+description: Project layout and dev server instructions for the Index pattern library
+alwaysApply: true
+---
+
+# Project Layout
+
+```
+Index/
+├── web/                    # Next.js 16 web app + API (localhost:3000)
+│   ├── src/app/api/        # API routes (tags, patterns, upload)
+│   ├── prisma/             # SQLite database, schema, seed
+│   └── .env                # DATABASE_URL, FIGMA_API_TOKEN
+├── figma-plugin/           # Figma plugin (design.index)
+└── docs/                   # Reference component examples and setup guides
+```
+
+## Dev Server
+
+Start: `cd web && npm run dev` (runs on port 3000)
+
+Port 3000 is shared with the Figma plugin — do NOT start other servers on it.
+
+## Key Facts
+
+- Node.js >= 20 required (see `.node-version`)
+- Database: SQLite via Prisma (`file:./dev.db`)
+- CORS headers for `/api/*` configured in `web/next.config.ts`

@@ -6,7 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { StatusBadge } from "@/components/StatusBadge";
+import { UpvoteButton } from "@/components/UpvoteButton";
 import { slugify } from "@/lib/utils";
+import { Tag } from "@/components/Tag";
 import {
   DndContext,
   closestCenter,
@@ -49,6 +52,7 @@ type PatternImage = {
   nodeName: string;
   sortOrder: number;
 };
+type Library = { id: string; name: string; slug: string; team: string; description: string; status: string };
 type PatternDetail = {
   id: string;
   title: string;
@@ -62,12 +66,16 @@ type PatternDetail = {
   authorName: string;
   authorAvatar: string;
   status: string;
+  effectiveStatus: string;
   featured: boolean;
   createdAt: string;
   updatedAt: string;
   tags: { tag: Tag }[];
   versions: PatternVersion[];
   images: PatternImage[];
+  library: Library | null;
+  _count?: { upvotes: number };
+  upvotedByVisitor?: boolean;
 };
 type RelatedPattern = {
   id: string;
@@ -158,7 +166,10 @@ export default function PatternDetailPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editTags, setEditTags] = useState<string[]>([]);
+  const [editLibraryId, setEditLibraryId] = useState<string | null>(null);
+  const [editStatus, setEditStatus] = useState<string>("");
   const [newTag, setNewTag] = useState("");
+  const [libraries, setLibraries] = useState<Library[]>([]);
 
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [showVersionDropdown, setShowVersionDropdown] = useState(false);
@@ -178,8 +189,15 @@ export default function PatternDetailPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const getVisitorId = () => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("index_visitor_id") || "";
+  };
+
   const fetchPattern = useCallback(() => {
-    fetch(`/api/patterns/${id}`)
+    const visitorId = getVisitorId();
+    const url = visitorId ? `/api/patterns/${id}?visitorId=${encodeURIComponent(visitorId)}` : `/api/patterns/${id}`;
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         setPattern(data.pattern);
@@ -191,6 +209,12 @@ export default function PatternDetailPage() {
   useEffect(() => {
     fetchPattern();
   }, [fetchPattern]);
+
+  useEffect(() => {
+    fetch("/api/libraries")
+      .then((r) => r.json())
+      .then((data) => setLibraries(Array.isArray(data) ? data : []));
+  }, []);
 
   const activeVersion = useMemo(() => {
     if (!pattern?.versions?.length) return null;
@@ -251,6 +275,8 @@ export default function PatternDetailPage() {
     setEditDescription(pattern.description);
     setEditCategory(pattern.category);
     setEditTags(pattern.tags.map(({ tag }) => tag.slug));
+    setEditLibraryId(pattern.library?.id ?? null);
+    setEditStatus(pattern.status ?? "");
     setEditImageOrder([...allImagesWithIds]);
     setEditing(true);
   };
@@ -282,6 +308,8 @@ export default function PatternDetailPage() {
           description: editDescription,
           category: editCategory,
           tags: editTags,
+          libraryId: editLibraryId,
+          status: editStatus,
         }),
       });
       setEditImageOrder([]);
@@ -295,9 +323,13 @@ export default function PatternDetailPage() {
   const deletePattern = async () => {
     setDeleting(true);
     try {
-      await fetch(`/api/patterns/${id}`, { method: "DELETE" });
-      window.location.href = "/";
-    } finally {
+      const res = await fetch(`/api/patterns/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        setDeleting(false);
+        return;
+      }
+      window.location.replace("/");
+    } catch {
       setDeleting(false);
     }
   };
@@ -390,21 +422,40 @@ export default function PatternDetailPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="max-w-[1400px] mx-auto px-8 h-[60px] flex items-center justify-between">
-          <Breadcrumb currentId={pattern.id} currentTitle={pattern.title} />
+          {editing ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-3 py-1.5 text-xs font-medium text-red-400 bg-surface hover:bg-red-500/10 rounded-[4px] transition-colors"
+            >
+              Delete
+            </button>
+          ) : (
+            <Breadcrumb currentId={pattern.id} currentTitle={pattern.title} />
+          )}
           <div className="flex items-center gap-2">
-            {!editing && (
+            {editing ? (
+              <>
+                <button
+                  onClick={cancelEditing}
+                  className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveChanges}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+              </>
+            ) : (
               <>
                 <button
                   onClick={startEditing}
                   className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
                 >
                   Edit
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="px-3 py-1.5 text-xs font-medium text-red-400 bg-surface hover:bg-red-500/10 rounded-[4px] transition-colors"
-                >
-                  Delete
                 </button>
               </>
             )}
@@ -443,7 +494,7 @@ export default function PatternDetailPage() {
           <div className="space-y-3 min-w-0">
             <div
               className="relative rounded-xl border border-border overflow-hidden group w-full h-[70vh] max-h-[800px] transition-colors duration-300"
-              style={{ backgroundColor: allImages[activeImageIndex]?.dominantColor || "#131318" }}
+              style={{ backgroundColor: allImages[activeImageIndex]?.dominantColor || "var(--surface)" }}
             >
               {allImages.length > 0 ? (
                 <Image
@@ -467,18 +518,18 @@ export default function PatternDetailPage() {
                 <>
                   <button
                     onClick={() => setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-black/40 border border-transparent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:border-white/40 hover:bg-black/60"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6.38128 1.38128C6.72299 1.03957 7.27701 1.03957 7.61872 1.38128C7.96043 1.72299 7.96043 2.27701 7.61872 2.61872L3.11244 7.125H15C15.4833 7.125 15.875 7.51675 15.875 8C15.875 8.48325 15.4833 8.875 15 8.875H3.11244L7.61872 13.3813C7.96043 13.723 7.96043 14.277 7.61872 14.6187C7.27701 14.9604 6.72299 14.9604 6.38128 14.6187L0.381282 8.61872C0.210427 8.44786 0.125 8.22393 0.125 8C0.125 7.77607 0.210427 7.55214 0.381282 7.38128L6.38128 1.38128Z" fill="currentColor" />
                     </svg>
                   </button>
                   <button
                     onClick={() => setActiveImageIndex((i) => (i + 1) % allImages.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-black/40 border border-transparent text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:border-white/40 hover:bg-black/60"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9.61872 1.38128C9.27701 1.03957 8.72299 1.03957 8.38128 1.38128C8.03957 1.72299 8.03957 2.27701 8.38128 2.61872L12.8876 7.125H1C0.516751 7.125 0.125 7.51675 0.125 8C0.125 8.48325 0.516751 8.875 1 8.875H12.8876L8.38128 13.3813C8.03957 13.723 8.03957 14.277 8.38128 14.6187C8.72299 14.9604 9.27701 14.9604 9.61872 14.6187L15.6187 8.61872C15.7896 8.44786 15.875 8.22393 15.875 8C15.875 7.77607 15.7896 7.55214 15.6187 7.38128L9.61872 1.38128Z" fill="currentColor" />
                     </svg>
                   </button>
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-1 bg-black/50 rounded-full">
@@ -583,17 +634,40 @@ export default function PatternDetailPage() {
                   </div>
 
                   <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted/60">Library</label>
+                    <select
+                      value={editLibraryId ?? ""}
+                      onChange={(e) => setEditLibraryId(e.target.value || null)}
+                      className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
+                    >
+                      <option value="">None</option>
+                      {libraries.map((lib) => (
+                        <option key={lib.id} value={lib.id}>
+                          {lib.team ? `${lib.team} / ` : ""}{lib.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted/60">Status</label>
+                    <select
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value)}
+                      className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
+                    >
+                      <option value="">Inherit from library</option>
+                      <option value="official">Official</option>
+                      <option value="community">Community</option>
+                      <option value="concept">Concept</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-muted/60">Tags</label>
                     <div className="flex flex-wrap gap-1.5">
                       {editTags.map((slug) => (
-                        <span key={slug} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-accent text-white rounded-[4px]">
-                          {slug.replace(/-/g, " ")}
-                          <button onClick={() => removeTag(slug)} className="hover:text-white/60">
-                            <svg width="10" height="10" viewBox="0 0 10 10">
-                              <path d="M7.5 2.5L2.5 7.5M2.5 2.5L7.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            </svg>
-                          </button>
-                        </span>
+                        <Tag key={slug} label={slug.replace(/-/g, " ")} onRemove={() => removeTag(slug)} />
                       ))}
                     </div>
                     <div className="flex gap-1.5">
@@ -614,21 +688,6 @@ export default function PatternDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={saveChanges}
-                    disabled={saving}
-                    className="flex-1 h-10 text-sm font-medium bg-accent text-white rounded-lg hover:bg-accent-light transition-colors disabled:opacity-50"
-                  >
-                    {saving ? "Saving..." : "Save changes"}
-                  </button>
-                  <button
-                    onClick={cancelEditing}
-                    className="px-4 h-10 text-sm font-medium text-foreground bg-surface hover:bg-surface-hover rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </>
             ) : (
               <>
@@ -712,14 +771,7 @@ export default function PatternDetailPage() {
                         <div>
                           <div className="flex flex-wrap gap-1 mb-1.5">
                             {versionTags.map((slug) => (
-                              <span key={slug} className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] bg-accent text-white rounded-[2px]">
-                                {slug.replace(/-/g, " ")}
-                                <button onClick={() => setVersionTags((prev) => prev.filter((t) => t !== slug))} className="hover:text-white/60">
-                                  <svg width="8" height="8" viewBox="0 0 10 10">
-                                    <path d="M7.5 2.5L2.5 7.5M2.5 2.5L7.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                  </svg>
-                                </button>
-                              </span>
+                              <Tag key={slug} label={slug.replace(/-/g, " ")} onRemove={() => setVersionTags((prev) => prev.filter((t) => t !== slug))} />
                             ))}
                           </div>
                           <div className="flex gap-1.5">
@@ -742,7 +794,7 @@ export default function PatternDetailPage() {
                           <button
                             onClick={addVersion}
                             disabled={addingVersion || !versionUrl.trim()}
-                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-light transition-colors disabled:opacity-50"
+                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
                           >
                             {addingVersion ? "Fetching screenshot..." : "Add version"}
                           </button>
@@ -799,7 +851,7 @@ export default function PatternDetailPage() {
                           <button
                             onClick={addVersion}
                             disabled={addingVersion || !versionUrl.trim()}
-                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-light transition-colors disabled:opacity-50"
+                            className="flex-1 h-8 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
                           >
                             {addingVersion ? "Fetching screenshot..." : "Add version"}
                           </button>
@@ -831,7 +883,7 @@ export default function PatternDetailPage() {
                     href={displayFigmaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full h-10 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-light transition-colors"
+                    className="flex items-center justify-center gap-2 w-full h-10 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-hover transition-colors"
                   >
                     <svg width="16" height="16" viewBox="0 0 38 57" fill="currentColor">
                       <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z" />
@@ -859,17 +911,43 @@ export default function PatternDetailPage() {
                       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Tags</h3>
                       <div className="flex flex-wrap gap-1.5">
                         {displayTags.map(({ tag }) => (
-                          <Link
-                            key={tag.id}
-                            href={`/?tag=${encodeURIComponent(tag.slug)}`}
-                            className="px-2.5 py-1 text-xs bg-accent text-white rounded-[2px] hover:bg-accent-light transition-colors"
-                          >
-                            {tag.name}
-                          </Link>
+                          <Tag key={tag.id} label={tag.name} href={`/?tag=${encodeURIComponent(tag.slug)}`} />
                         ))}
                       </div>
                     </div>
                   )}
+
+                  {pattern.library && (
+                    <div>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Library</h3>
+                      <Link
+                        href={`/libraries/${pattern.library.slug}`}
+                        className="text-sm text-muted hover:text-foreground transition-colors"
+                      >
+                        {pattern.library.name}
+                      </Link>
+                      {pattern.library.team && (
+                        <span className="text-sm text-muted ml-1">({pattern.library.team})</span>
+                      )}
+                    </div>
+                  )}
+
+                  {pattern.effectiveStatus && (
+                    <div>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Status</h3>
+                      <StatusBadge status={pattern.effectiveStatus} />
+                    </div>
+                  )}
+
+                  <div>
+                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Upvotes</h3>
+                    <UpvoteButton
+                      patternId={pattern.id}
+                      initialCount={pattern._count?.upvotes ?? 0}
+                      initialUpvoted={pattern.upvotedByVisitor ?? false}
+                      compact={false}
+                    />
+                  </div>
 
                   {pattern.authorName && (
                     <div>
@@ -965,10 +1043,10 @@ export default function PatternDetailPage() {
                   e.stopPropagation();
                   setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-white/10 border border-transparent text-white flex items-center justify-center transition-all hover:border-white/30 hover:bg-white/20"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                  <path d="M6.38128 1.38128C6.72299 1.03957 7.27701 1.03957 7.61872 1.38128C7.96043 1.72299 7.96043 2.27701 7.61872 2.61872L3.11244 7.125H15C15.4833 7.125 15.875 7.51675 15.875 8C15.875 8.48325 15.4833 8.875 15 8.875H3.11244L7.61872 13.3813C7.96043 13.723 7.96043 14.277 7.61872 14.6187C7.27701 14.9604 6.72299 14.9604 6.38128 14.6187L0.381282 8.61872C0.210427 8.44786 0.125 8.22393 0.125 8C0.125 7.77607 0.210427 7.55214 0.381282 7.38128L6.38128 1.38128Z" fill="currentColor" />
                 </svg>
               </button>
               <button
@@ -976,10 +1054,10 @@ export default function PatternDetailPage() {
                   e.stopPropagation();
                   setActiveImageIndex((i) => (i + 1) % allImages.length);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-white/10 border border-transparent text-white flex items-center justify-center transition-all hover:border-white/30 hover:bg-white/20"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                  <path d="M9.61872 1.38128C9.27701 1.03957 8.72299 1.03957 8.38128 1.38128C8.03957 1.72299 8.03957 2.27701 8.38128 2.61872L12.8876 7.125H1C0.516751 7.125 0.125 7.51675 0.125 8C0.125 8.48325 0.516751 8.875 1 8.875H12.8876L8.38128 13.3813C8.03957 13.723 8.03957 14.277 8.38128 14.6187C8.72299 14.9604 9.27701 14.9604 9.61872 14.6187L15.6187 8.61872C15.7896 8.44786 15.875 8.22393 15.875 8C15.875 7.77607 15.7896 7.55214 15.6187 7.38128L9.61872 1.38128Z" fill="currentColor" />
                 </svg>
               </button>
             </>

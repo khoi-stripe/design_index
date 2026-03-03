@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sail Design Tokens - CSS Variables */
+:root {
+  /* Color tokens - Light mode */
+  --sail-color-background: #ffffff;
+  --sail-color-background-secondary: #f7f9fa;
+  --sail-color-background-tertiary: #f0f2f5;
+
+  --sail-color-text: #1a1a1a;
+  --sail-color-text-secondary: #5a5a5a;
+  --sail-color-text-tertiary: #8a8a8a;
+
+  --sail-color-border: #e0e0e0;
+  --sail-color-border-hover: #c0c0c0;
+
+  /* Elevation shadows for light mode */
+  --sail-shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --sail-shadow-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.08);
+  --sail-shadow-elevation-3: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode tokens */
+.dark {
+  --sail-color-background: #1a1a1a;
+  --sail-color-background-secondary: #242424;
+  --sail-color-background-tertiary: #2e2e2e;
+
+  --sail-color-text: #ffffff;
+  --sail-color-text-secondary: #b0b0b0;
+  --sail-color-text-tertiary: #808080;
+
+  --sail-color-border: #3a3a3a;
+  --sail-color-border-hover: #4a4a4a;
+
+  /* Elevation shadows for dark mode */
+  --sail-shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --sail-shadow-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --sail-shadow-elevation-3: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Base styles using Sail tokens */
+@layer base {
+  html {
+    font-family: theme('fontFamily.sail');
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    @apply text-sail-base;
+  }
+
+  /* Focus styles (Sail-like) */
+  *:focus-visible {
+    outline: 2px solid theme('colors.primary.DEFAULT');
+    outline-offset: 2px;
+  }
+
+  /* Selection styles */
+  ::selection {
+    background-color: theme('colors.primary.light');
+    color: theme('colors.primary.DEFAULT');
+  }
+}
+
+/* Custom utility classes using Sail patterns */
+@layer utilities {
+  /* Sail-style card */
+  .sail-card {
+    @apply bg-background border border-border rounded-sail-md;
+    box-shadow: var(--sail-shadow-elevation-1);
+    transition: box-shadow theme('transitionDuration.sail-base') ease;
+  }
+
+  .sail-card:hover {
+    box-shadow: var(--sail-shadow-elevation-2);
+  }
+
+  /* Sail-style input */
+  .sail-input {
+    @apply w-full px-sail-150 py-sail-100
+           bg-background text-foreground
+           border border-border rounded-sail-md
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+           transition-sail-base;
+  }
+
+  /* Sail-style button base */
+  .sail-button-base {
+    @apply px-sail-200 py-sail-100
+           rounded-sail-md font-medium text-sail-sm
+           transition-sail-fast
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Sail-style primary button */
+  .sail-button-primary {
+    @apply sail-button-base
+           bg-primary text-white
+           hover:bg-primary-hover active:bg-primary-pressed
+           focus:ring-primary;
+  }
+
+  /* Sail-style secondary button */
+  .sail-button-secondary {
+    @apply sail-button-base
+           bg-background-secondary text-foreground
+           border border-border
+           hover:bg-background-tertiary hover:border-border-hover
+           focus:ring-primary;
+  }
+
+  /* Transition utilities */
+  .transition-sail-fast {
+    transition-duration: theme('transitionDuration.sail-fast');
+  }
+
+  .transition-sail-base {
+    transition-duration: theme('transitionDuration.sail-base');
+  }
+
+  .transition-sail-slow {
+    transition-duration: theme('transitionDuration.sail-slow');
+  }
+}
+
+/* Scrollbar styling (Sail-like) */
+@layer utilities {
+  .sail-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .sail-scrollbar::-webkit-scrollbar-track {
+    background: var(--sail-color-background-secondary);
+  }
+
+  .sail-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--sail-color-border);
+    border-radius: 4px;
+  }
+
+  .sail-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--sail-color-border-hover);
+  }
+}

@@ -4,6 +4,7 @@ import {
   uploadScreenshot,
   addVersion,
   updatePatternMeta,
+  fetchLibraries,
 } from "../api";
 import { CATEGORIES, IMG_BASE } from "../shared/constants";
 import { useTags } from "../hooks/useTags";
@@ -21,6 +22,8 @@ type SearchResult = {
   authorAvatar: string;
   category: string;
   createdAt: string;
+  libraryId?: string | null;
+  status?: string | null;
   tags: { tag: { id: string; name: string; slug: string } }[];
 };
 
@@ -63,6 +66,9 @@ export function Updater({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [libraries, setLibraries] = useState<{ id: string; name: string; slug: string; team: string; status: string; description: string }[]>([]);
+  const [selectedLibraryId, setSelectedLibraryId] = useState("");
+  const [patternStatus, setPatternStatus] = useState("");
   const statusTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const tags = useTags(user?.name);
@@ -100,11 +106,17 @@ export function Updater({
     };
   }, [query]);
 
+  useEffect(() => {
+    fetchLibraries().then(setLibraries).catch(() => setLibraries([]));
+  }, []);
+
   const selectPattern = (pattern: SearchResult) => {
     setSelected(pattern);
     setTitle(pattern.title);
     setDescription(pattern.description);
     setCategory(pattern.category);
+    setSelectedLibraryId(pattern.libraryId || "");
+    setPatternStatus(pattern.status || "");
     tags.setSelectedTags(pattern.tags.map((t) => t.tag.slug));
     setPhase("edit");
   };
@@ -207,6 +219,8 @@ export function Updater({
         title.trim() !== selected.title ||
         description.trim() !== selected.description ||
         category !== selected.category ||
+        selectedLibraryId !== (selected.libraryId || "") ||
+        patternStatus !== (selected.status || "") ||
         JSON.stringify([...tags.selectedTags].sort()) !==
           JSON.stringify(
             selected.tags.map((t) => t.tag.slug).sort()
@@ -218,6 +232,8 @@ export function Updater({
           description: description.trim(),
           category,
           tags: tags.selectedTags,
+          libraryId: selectedLibraryId || undefined,
+          status: patternStatus || undefined,
         });
       }
 
@@ -241,7 +257,7 @@ export function Updater({
       setStatus("error");
       setErrorMsg(e instanceof Error ? e.message : "Something went wrong");
     }
-  }, [selected, title, description, category, tags.selectedTags, selections]);
+  }, [selected, title, description, category, tags.selectedTags, selections, selectedLibraryId, patternStatus]);
 
   // --- SEARCH PHASE ---
   if (phase === "search") {
@@ -384,24 +400,71 @@ export function Updater({
         </div>
 
         <div className="field">
+          <label className="label">Library <span style={{ fontWeight: "normal", color: "var(--color-text-secondary)" }}>optional</span></label>
+          <select
+            className="input"
+            value={selectedLibraryId}
+            onChange={(e) => setSelectedLibraryId(e.target.value)}
+          >
+            <option value="">None</option>
+            {Array.from(new Set(libraries.map((l) => l.team)))
+              .filter(Boolean)
+              .sort()
+              .map((team) => (
+                <optgroup key={team} label={team}>
+                  {libraries
+                    .filter((l) => l.team === team)
+                    .map((lib) => (
+                      <option key={lib.id} value={lib.id}>
+                        {lib.name}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            {libraries.some((l) => !l.team) && (
+              <optgroup label="Other">
+                {libraries
+                  .filter((l) => !l.team)
+                  .map((lib) => (
+                    <option key={lib.id} value={lib.id}>
+                      {lib.name}
+                    </option>
+                  ))}
+              </optgroup>
+            )}
+          </select>
+        </div>
+
+        <div className="field">
           <label className="label">Category</label>
-          <div className="category-selector">
+          <select
+            className="input"
+            value={category || ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setCategory(v || null);
+              setErrorMsg("");
+            }}
+          >
+            <option value="" disabled>Select category...</option>
             {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => {
-                  setCategory(cat.value);
-                  setErrorMsg("");
-                }}
-                className={`category-option ${
-                  category === cat.value ? "active" : ""
-                }`}
-              >
-                <span className="category-label">{cat.label}</span>
-                <span className="category-desc">{cat.desc}</span>
-              </button>
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
-          </div>
+          </select>
+        </div>
+
+        <div className="field">
+          <label className="label">Status <span style={{ fontWeight: "normal", color: "var(--color-text-secondary)" }}>optional</span></label>
+          <select
+            className="input"
+            value={patternStatus}
+            onChange={(e) => setPatternStatus(e.target.value)}
+          >
+            <option value="">Inherit from library</option>
+            <option value="official">Official</option>
+            <option value="community">Community</option>
+            <option value="concept">Concept</option>
+          </select>
         </div>
 
         <div className="field">
