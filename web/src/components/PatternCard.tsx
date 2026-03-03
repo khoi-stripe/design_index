@@ -229,7 +229,17 @@ export function PatternCard({
           {(pattern.library || pattern.tags.length > 0) && (
             <div className="flex items-center gap-1 overflow-hidden pr-8">
               {pattern.library && (
-                <MetadataChip label={pattern.library.name} icon={<LibraryIcon />} className="shrink-0" />
+                <MetadataChip
+                  label={pattern.library.name}
+                  icon={<LibraryIcon />}
+                  className="shrink-0"
+                  href={`/libraries/${pattern.library.slug}`}
+                  onClick={(e) => {
+                    e?.preventDefault();
+                    e?.stopPropagation();
+                    router.push(`/libraries/${pattern.library!.slug}`);
+                  }}
+                />
               )}
               {pattern.tags.map(({ tag }) => (
                 <Tag

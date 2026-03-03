@@ -24,11 +24,13 @@ export function MetadataChip({
   href,
   icon,
   className = "",
+  onClick,
 }: {
   label: string;
   href?: string;
   icon?: ReactNode;
   className?: string;
+  onClick?: (e?: React.MouseEvent) => void;
 }) {
   const classes = `${baseClass} ${className}`.trim();
 
@@ -40,8 +42,8 @@ export function MetadataChip({
   );
 
   if (href) {
-    return <Link href={href} className={classes}>{content}</Link>;
+    return <Link href={href} className={classes} onClick={onClick}>{content}</Link>;
   }
 
-  return <span className={classes}>{content}</span>;
+  return <span className={classes} onClick={onClick}>{content}</span>;
 }
