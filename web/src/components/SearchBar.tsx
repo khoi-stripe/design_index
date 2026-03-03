@@ -27,11 +27,13 @@ export function SearchBar({
   onChange,
   filters = [],
   onFiltersChange,
+  className,
 }: {
   value: string;
   onChange: (value: string) => void;
   filters?: SearchFilter[];
   onFiltersChange?: (filters: SearchFilter[]) => void;
+  className?: string;
 }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -112,7 +114,7 @@ export function SearchBar({
   };
 
   return (
-    <div className="w-[600px] max-w-full relative" ref={containerRef}>
+    <div className={`${className ?? "w-[600px]"} max-w-full relative`} ref={containerRef}>
       <div
         className="flex items-center gap-1.5 min-h-[36px] bg-surface rounded-lg transition-all border border-transparent focus-within:bg-card-bg focus-within:border-border cursor-text"
         onClick={() => inputRef.current?.focus()}

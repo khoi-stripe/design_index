@@ -1,14 +1,34 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { SearchBar, type SearchFilter } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { setBreadcrumbOrigin } from "@/components/Breadcrumb";
 import type { Library, Pattern } from "@/lib/types";
 
+const CATEGORIES = [
+  { value: null, label: "All" },
+  { value: "flow", label: "Flows" },
+  { value: "screen", label: "Screens" },
+  { value: "component", label: "Components" },
+  { value: "asset", label: "Assets" },
+] as const;
+
 const STATUS_OPTIONS = [
+  { value: null, label: "All", color: "#FFFFFF" },
+  { value: "concept", label: "Concept", color: "#5B9BF8" },
+  { value: "community", label: "In-use", color: "#3ECF8E" },
+  { value: "official", label: "Official", color: "#675DFF" },
+] as const;
+
+const EDIT_STATUS_OPTIONS = [
   { value: "official", label: "Official" },
-  { value: "community", label: "Community" },
+  { value: "community", label: "In-use" },
   { value: "concept", label: "Concept" },
 ] as const;
 
@@ -31,6 +51,78 @@ export default function LibraryDetailPage() {
   const [editStatus, setEditStatus] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Filter state
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<SearchFilter[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeStatus, setActiveStatus] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Menu state
+  const [showTypeMenu, setShowTypeMenu] = useState(false);
+  const [, setTypeMenuVisible] = useState(false);
+  const [typeMenuClosing, setTypeMenuClosing] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [, setStatusMenuVisible] = useState(false);
+  const [statusMenuClosing, setStatusMenuClosing] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const typeMenuRef = useRef<HTMLDivElement>(null);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  const closeAllMenus = () => {
+    if (showTypeMenu) closeTypeMenu();
+    if (showStatusMenu) closeStatusMenu();
+  };
+
+  const openTypeMenu = () => {
+    setShowDatePicker(false);
+    if (showStatusMenu) closeStatusMenu();
+    setTypeMenuVisible(true);
+    setTypeMenuClosing(false);
+    setShowTypeMenu(true);
+  };
+
+  const closeTypeMenu = () => {
+    setTypeMenuClosing(true);
+    setTimeout(() => {
+      setShowTypeMenu(false);
+      setTypeMenuVisible(false);
+      setTypeMenuClosing(false);
+    }, 150);
+  };
+
+  const toggleTypeMenu = () => {
+    if (showTypeMenu && !typeMenuClosing) closeTypeMenu();
+    else if (!showTypeMenu) openTypeMenu();
+  };
+
+  const openStatusMenu = () => {
+    setShowDatePicker(false);
+    if (showTypeMenu) closeTypeMenu();
+    setStatusMenuVisible(true);
+    setStatusMenuClosing(false);
+    setShowStatusMenu(true);
+  };
+
+  const closeStatusMenu = () => {
+    setStatusMenuClosing(true);
+    setTimeout(() => {
+      setShowStatusMenu(false);
+      setStatusMenuVisible(false);
+      setStatusMenuClosing(false);
+    }, 150);
+  };
+
+  const toggleStatusMenu = () => {
+    if (showStatusMenu && !statusMenuClosing) closeStatusMenu();
+    else if (!showStatusMenu) openStatusMenu();
+  };
+
+  const handleDatePickerOpenChange = (open: boolean) => {
+    if (open) closeAllMenus();
+    setShowDatePicker(open);
+  };
+
   const fetchLibrary = useCallback(async () => {
     if (!slug) return;
     try {
@@ -43,6 +135,7 @@ export default function LibraryDetailPage() {
       }
       const data = await res.json();
       setLibrary(data);
+      setBreadcrumbOrigin(`/libraries/${slug}`, data.name);
       setEditName(data.name);
       setEditTeam(data.team || "");
       setEditDescription(data.description || "");
@@ -53,17 +146,49 @@ export default function LibraryDetailPage() {
     }
   }, [slug]);
 
-  const fetchPatterns = useCallback(async (offset = 0) => {
-    if (!library?.id) return;
-    const params = new URLSearchParams({
-      libraryId: library.id,
-      limit: String(PAGE_SIZE),
-      offset: String(offset),
-    });
+  const buildParams = useCallback(
+    (offset = 0) => {
+      if (!library?.id) return null;
+      const params = new URLSearchParams();
+      params.set("libraryId", library.id);
+      if (activeCategory) params.set("category", activeCategory);
+      if (activeStatus) params.set("status", activeStatus);
+      if (search) params.set("search", search);
+      const tagFilters = filters.filter((f) => f.type === "tag");
+      const authorFilter = filters.find((f) => f.type === "author");
+      if (tagFilters.length > 0) params.set("tags", tagFilters.map((f) => f.value).join(","));
+      if (authorFilter) params.set("author", authorFilter.value);
+      if (dateRange?.from) params.set("dateFrom", format(dateRange.from, "yyyy-MM-dd"));
+      if (dateRange?.to) params.set("dateTo", format(dateRange.to, "yyyy-MM-dd"));
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String(offset));
+      return params;
+    },
+    [library?.id, activeCategory, activeStatus, search, filters, dateRange]
+  );
+
+  const fetchPatterns = useCallback(async () => {
+    const params = buildParams(0);
+    if (!params) return;
+    setPatternsLoading(true);
     const res = await fetch(`/api/patterns?${params}`);
     const data = await res.json();
-    return { patterns: data.patterns, total: data.total };
-  }, [library?.id]);
+    setPatterns(data.patterns);
+    setTotal(data.total);
+    setPatternsLoading(false);
+  }, [buildParams]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || patterns.length >= total) return;
+    const params = buildParams(patterns.length);
+    if (!params) return;
+    setLoadingMore(true);
+    const res = await fetch(`/api/patterns?${params}`);
+    const data = await res.json();
+    setPatterns((prev) => [...prev, ...data.patterns]);
+    setTotal(data.total);
+    setLoadingMore(false);
+  }, [buildParams, patterns.length, total, loadingMore]);
 
   useEffect(() => {
     if (!slug) return;
@@ -74,30 +199,9 @@ export default function LibraryDetailPage() {
 
   useEffect(() => {
     if (!library) return;
-    setPatterns([]);
-    setTotal(0);
-    setPatternsLoading(true);
-    fetchPatterns(0).then((result) => {
-      if (result) {
-        setPatterns(result.patterns);
-        setTotal(result.total);
-      }
-    }).finally(() => setPatternsLoading(false));
-  }, [library?.id, fetchPatterns]);
-
-  const loadMore = useCallback(async () => {
-    if (!library || loadingMore || patterns.length >= total) return;
-    setLoadingMore(true);
-    try {
-      const result = await fetchPatterns(patterns.length);
-      if (result) {
-        setPatterns((prev) => [...prev, ...result.patterns]);
-        setTotal(result.total);
-      }
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [library, loadingMore, patterns.length, total, fetchPatterns]);
+    const timeout = setTimeout(fetchPatterns, search ? 300 : 0);
+    return () => clearTimeout(timeout);
+  }, [library?.id, fetchPatterns, search]);
 
   const startEditing = () => {
     if (!library) return;
@@ -140,6 +244,62 @@ export default function LibraryDetailPage() {
       setSaving(false);
     }
   };
+
+  const activeCategoryLabel =
+    CATEGORIES.find((c) => c.value === activeCategory)?.label || "All";
+  const activeStatusLabel =
+    STATUS_OPTIONS.find((s) => s.value === activeStatus)?.label || "All";
+
+  const typeFilterMenu = (
+    <div className="relative inline-block">
+      <button
+        onClick={toggleTypeMenu}
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showTypeMenu ? "text-foreground bg-background border !border-border" : ""}`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <span className="font-medium tracking-tight">Type: {activeCategoryLabel}</span>
+      </button>
+      {showTypeMenu && (
+        <div ref={typeMenuRef} className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${typeMenuClosing ? "menu-spring-exit" : "menu-spring-enter"}`}>
+          {CATEGORIES.map((cat) => (
+            <button key={cat.label} onClick={() => { setActiveCategory(cat.value); closeTypeMenu(); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${activeCategory === cat.value ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>{cat.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const statusFilterMenu = (
+    <div className="relative inline-block">
+      <button
+        onClick={toggleStatusMenu}
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showStatusMenu ? "text-foreground bg-background border !border-border" : ""}`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <span className="font-medium tracking-tight">Status: {activeStatusLabel}</span>
+      </button>
+      {showStatusMenu && (
+        <div ref={statusMenuRef} className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${statusMenuClosing ? "menu-spring-exit" : "menu-spring-enter"}`}>
+          {STATUS_OPTIONS.map((opt) => (
+            <button key={opt.label} onClick={() => { setActiveStatus(opt.value); closeStatusMenu(); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors flex items-center gap-2 ${activeStatus === opt.value ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>
+              <span className="shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const dateRangeControl = (
+    <DateRangePicker value={dateRange} onChange={setDateRange} open={showDatePicker} onOpenChange={handleDatePickerOpenChange} />
+  );
+
+  const countBadge = (
+    <span className="text-xs text-neutral-400 py-1 px-2 bg-neutral-900 rounded-[3px]">
+      {patternsLoading ? "..." : patterns.length}
+    </span>
+  );
 
   if (loading && !library) {
     return (
@@ -187,14 +347,7 @@ export default function LibraryDetailPage() {
               </svg>
               <span className="text-xs font-semibold tracking-tight">Design.Index</span>
             </Link>
-            <span className="text-muted shrink-0">→</span>
-            <Link
-              href="/libraries"
-              className="text-muted hover:text-foreground transition-colors text-xs"
-            >
-              Libraries
-            </Link>
-            <span className="text-muted shrink-0">→</span>
+            <span className="text-muted shrink-0">&rarr;</span>
             <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
               {library.name}
             </span>
@@ -231,7 +384,7 @@ export default function LibraryDetailPage() {
       <main className="bg-content-bg min-h-[calc(100vh-60px)]">
         <div className="max-w-[1400px] mx-auto p-8">
           {/* Library info section */}
-          <section className="mb-10">
+          <section className="mb-6">
             {editing ? (
               <div className="space-y-4 max-w-2xl">
                 <div>
@@ -276,7 +429,7 @@ export default function LibraryDetailPage() {
                     onChange={(e) => setEditStatus(e.target.value)}
                     className="w-full px-3 py-2 text-sm bg-surface text-foreground border border-border rounded-[4px] outline-none focus:border-accent"
                   >
-                    {STATUS_OPTIONS.map((opt) => (
+                    {EDIT_STATUS_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -306,9 +459,23 @@ export default function LibraryDetailPage() {
             )}
           </section>
 
+          {/* Search and filter bar */}
+          <section className="mb-6">
+            <div className="flex items-center gap-6">
+              <div className="flex-1 min-w-0">
+                <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} className="w-full" />
+              </div>
+              <div className="shrink-0 flex items-center gap-1.5">
+                {typeFilterMenu}
+                {statusFilterMenu}
+                {dateRangeControl}
+                {countBadge}
+              </div>
+            </div>
+          </section>
+
           {/* Patterns grid */}
           <section>
-            <h2 className="text-sm font-semibold text-foreground mb-4">Patterns</h2>
             <PatternGrid
               patterns={patterns}
               loading={patternsLoading}

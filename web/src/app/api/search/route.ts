@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
   const [patterns, tags, authors] = await Promise.all([
     prisma.pattern.findMany({
-      where: { title: { contains: q }, status: "published" },
+      where: { title: { contains: q } },
       select: { id: true, title: true },
       take: 5,
       orderBy: { createdAt: "desc" },
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       take: 5,
     }),
     prisma.pattern.findMany({
-      where: { authorName: { contains: q }, status: "published" },
+      where: { authorName: { contains: q } },
       select: { authorName: true, authorAvatar: true },
       distinct: ["authorName"],
       take: 5,

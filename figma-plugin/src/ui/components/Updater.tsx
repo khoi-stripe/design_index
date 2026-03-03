@@ -124,7 +124,7 @@ export function Updater({
   const handleSubmit = useCallback(async () => {
     if (!selected) return;
     if (!category) {
-      setErrorMsg("Choose a category");
+      setErrorMsg("Choose a type");
       return;
     }
     if (tags.selectedTags.length === 0) {
@@ -436,7 +436,7 @@ export function Updater({
         </div>
 
         <div className="field">
-          <label className="label">Category</label>
+          <label className="label">Type</label>
           <select
             className="input"
             value={category || ""}
@@ -446,7 +446,7 @@ export function Updater({
               setErrorMsg("");
             }}
           >
-            <option value="" disabled>Select category...</option>
+            <option value="" disabled>Select type...</option>
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
@@ -462,7 +462,7 @@ export function Updater({
           >
             <option value="">Inherit from library</option>
             <option value="official">Official</option>
-            <option value="community">Community</option>
+            <option value="community">In-use</option>
             <option value="concept">Concept</option>
           </select>
         </div>

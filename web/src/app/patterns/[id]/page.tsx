@@ -7,6 +7,7 @@ import Image from "next/image";
 import { PatternGrid } from "@/components/PatternGrid";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { MetadataChip } from "@/components/MetadataChip";
+import { StatusBadge } from "@/components/StatusBadge";
 import { UpvoteButton } from "@/components/UpvoteButton";
 import { slugify } from "@/lib/utils";
 import { Tag } from "@/components/Tag";
@@ -654,7 +655,7 @@ export default function PatternDetailPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted/60">Category</label>
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted/60">Type</label>
                     <div className="flex gap-1.5">
                       {CATEGORIES.map((cat) => (
                         <button
@@ -697,7 +698,7 @@ export default function PatternDetailPage() {
                     >
                       <option value="">Inherit from library</option>
                       <option value="official">Official</option>
-                      <option value="community">Community</option>
+                      <option value="community">In-use</option>
                       <option value="concept">Concept</option>
                     </select>
                   </div>
@@ -730,10 +731,13 @@ export default function PatternDetailPage() {
               </>
             ) : (
               <>
-                <div>
-                  <h1 className="text-xl font-semibold text-foreground mb-2">{pattern.title}</h1>
+                <div className="flex flex-col gap-1">
+                  {pattern.effectiveStatus && (
+                    <div><StatusBadge status={pattern.effectiveStatus} /></div>
+                  )}
+                  <h1 className="text-xl font-semibold text-foreground">{pattern.title}</h1>
                   {displayDescription && (
-                    <p className="text-sm text-muted leading-relaxed">{displayDescription}</p>
+                    <p className="text-sm text-muted leading-relaxed mt-1">{displayDescription}</p>
                   )}
                 </div>
 
@@ -943,7 +947,7 @@ export default function PatternDetailPage() {
                 <div className="space-y-4">
                   {pattern.category && (
                     <div>
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Category</h3>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Type</h3>
                       <MetadataChip label={pattern.category} />
                     </div>
                   )}
@@ -956,23 +960,6 @@ export default function PatternDetailPage() {
                           <Tag key={tag.id} label={tag.name} href={`/?tag=${encodeURIComponent(tag.slug)}`} />
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {pattern.library && (
-                    <div>
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Library</h3>
-                      <MetadataChip label={pattern.library.name} href={`/libraries/${pattern.library.slug}`} />
-                      {pattern.library.team && (
-                        <span className="text-sm text-muted ml-1">({pattern.library.team})</span>
-                      )}
-                    </div>
-                  )}
-
-                  {pattern.effectiveStatus && (
-                    <div>
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted/60 mb-2">Status</h3>
-                      <MetadataChip label={pattern.effectiveStatus} />
                     </div>
                   )}
 

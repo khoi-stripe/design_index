@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Pattern } from "@/lib/types";
 import { Tag } from "@/components/Tag";
+import { StatusBadge } from "@/components/StatusBadge";
 
 function isLightColor(color: string) {
   if (!color) return false;
@@ -107,21 +108,14 @@ export function PatternCard({
           {!imageLoaded && imgSrc && (
             <div className="absolute inset-0 bg-surface animate-pulse" />
           )}
-          {(pattern.library || pattern.category || (pattern.effectiveStatus && pattern.effectiveStatus !== "community")) && (
+          {(pattern.effectiveStatus || pattern.category) && (
             <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {pattern.library && (
-                <span className="px-2 py-[2px] text-[11px] font-medium bg-black/60 text-white rounded-[3px] whitespace-nowrap">
-                  {pattern.library.name}
-                </span>
+              {pattern.effectiveStatus && (
+                <StatusBadge status={pattern.effectiveStatus} variant={useDarkArrows ? "light" : "dark"} />
               )}
               {pattern.category && (
                 <span className="px-2 py-[2px] text-[11px] font-medium bg-black/60 text-white rounded-[3px] whitespace-nowrap capitalize">
                   {pattern.category}
-                </span>
-              )}
-              {pattern.effectiveStatus && pattern.effectiveStatus !== "community" && (
-                <span className="px-2 py-[2px] text-[11px] font-medium bg-black/60 text-white rounded-[3px] whitespace-nowrap capitalize">
-                  {pattern.effectiveStatus}
                 </span>
               )}
             </div>
@@ -214,10 +208,11 @@ export function PatternCard({
                   </div>
                 )}
                 {showAvatarTooltip && pattern.authorName && (
-                  <div className="absolute bottom-full right-0 mb-2 menu-spring-enter" style={{ transformOrigin: "bottom right" }}>
-                    <div className="bg-background border border-border rounded-lg px-3 py-1.5 shadow-lg whitespace-nowrap">
-                      <span className="text-xs font-medium text-foreground">{pattern.authorName}</span>
-                    </div>
+                  <div
+                    className="absolute bottom-full right-0 mb-2 menu-spring-enter bg-background border border-border rounded-[3px] shadow-lg whitespace-nowrap flex items-center"
+                    style={{ transformOrigin: "bottom right", height: 20, paddingInline: 8, fontSize: 11, fontWeight: 500, color: "var(--foreground)" }}
+                  >
+                    {pattern.authorName}
                   </div>
                 )}
               </div>

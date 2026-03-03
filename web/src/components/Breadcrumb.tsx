@@ -4,8 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 type Crumb = { id: string; title: string };
+type Origin = { href: string; label: string } | null;
 
 const STORAGE_KEY = "breadcrumb-trail";
+const ORIGIN_KEY = "breadcrumb-origin";
 
 function readTrail(): Crumb[] {
   try {
@@ -20,8 +22,22 @@ function writeTrail(trail: Crumb[]) {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(trail));
 }
 
+function readOrigin(): Origin {
+  try {
+    const raw = sessionStorage.getItem(ORIGIN_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setBreadcrumbOrigin(href: string, label: string) {
+  sessionStorage.setItem(ORIGIN_KEY, JSON.stringify({ href, label }));
+}
+
 export function clearBreadcrumbTrail() {
   sessionStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(ORIGIN_KEY);
 }
 
 export function Breadcrumb({
@@ -33,12 +49,15 @@ export function Breadcrumb({
 }) {
   const router = useRouter();
   const [trail, setTrail] = useState<Crumb[]>([]);
+  const [origin, setOrigin] = useState<Origin>(null);
   const [expanded, setExpanded] = useState(false);
   const initialized = useRef(false);
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
+
+    setOrigin(readOrigin());
 
     let existing = readTrail();
     const idx = existing.findIndex((c) => c.id === currentId);
@@ -69,6 +88,14 @@ export function Breadcrumb({
     router.push("/");
   };
 
+  const handleOriginClick = () => {
+    if (!origin) return;
+    clearBreadcrumbTrail();
+    router.push(origin.href);
+  };
+
+  const showOriginCrumb = origin && origin.href !== "/";
+
   const previousCrumbs = trail.slice(0, -1);
   const currentCrumb = trail[trail.length - 1];
   const needsCollapse = previousCrumbs.length > 2 && !expanded;
@@ -97,9 +124,21 @@ export function Breadcrumb({
         <span className="text-xs font-semibold tracking-tight">Design.Index</span>
       </button>
 
-      {visiblePrevious.map((item, i) => (
+      {showOriginCrumb && (
+        <span className="flex items-center gap-1.5 min-w-0">
+          <span className="text-muted shrink-0">&rarr;</span>
+          <button
+            onClick={handleOriginClick}
+            className="text-muted hover:text-foreground transition-colors text-xs truncate max-w-[160px]"
+          >
+            {origin!.label}
+          </button>
+        </span>
+      )}
+
+      {visiblePrevious.map((item) => (
         <span key={item === "ellipsis" ? "ellipsis" : item.id} className="flex items-center gap-1.5 min-w-0">
-          <span className="text-muted shrink-0">→</span>
+          <span className="text-muted shrink-0">&rarr;</span>
           {item === "ellipsis" ? (
             <button
               onClick={() => setExpanded(true)}
@@ -120,7 +159,7 @@ export function Breadcrumb({
 
       {currentCrumb && (
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="text-muted shrink-0">→</span>
+          <span className="text-muted shrink-0">&rarr;</span>
           <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
             {currentCrumb.title}
           </span>

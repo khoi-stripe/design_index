@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { SearchBar, type SearchFilter } from "@/components/SearchBar";
 import { PatternGrid } from "@/components/PatternGrid";
-import { clearBreadcrumbTrail } from "@/components/Breadcrumb";
+import { clearBreadcrumbTrail, setBreadcrumbOrigin } from "@/components/Breadcrumb";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import type { Pattern, Library } from "@/lib/types";
+import { ProtoControls, useProtoLayout } from "@/components/ProtoControls";
 
 const CATEGORIES = [
   { value: null, label: "All" },
@@ -19,10 +20,10 @@ const CATEGORIES = [
 ] as const;
 
 const STATUS_OPTIONS = [
-  { value: null, label: "All" },
-  { value: "concept", label: "Concept" },
-  { value: "community", label: "Community" },
-  { value: "official", label: "Official" },
+  { value: null, label: "All", color: "#FFFFFF" },
+  { value: "concept", label: "Concept", color: "#5B9BF8" },
+  { value: "community", label: "In-use", color: "#3ECF8E" },
+  { value: "official", label: "Official", color: "#675DFF" },
 ] as const;
 
 export default function HomePage() {
@@ -32,6 +33,7 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeLibrary, setActiveLibrary] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState<string | null>(null);
+  const [protoLayout, setProtoLayout] = useProtoLayout();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [filters, setFilters] = useState<SearchFilter[]>(() => {
     const tagParam = searchParams.get("tag");
@@ -143,6 +145,7 @@ export default function HomePage() {
 
   useEffect(() => {
     clearBreadcrumbTrail();
+    setBreadcrumbOrigin("/", "Design.Index");
   }, []);
 
   useEffect(() => {
@@ -265,205 +268,157 @@ export default function HomePage() {
   const activeStatusLabel =
     STATUS_OPTIONS.find((s) => s.value === activeStatus)?.label || "All";
 
+  const logoLink = (
+    <a
+      href="/"
+      className="flex items-center gap-2 shrink-0"
+      onClick={(e) => {
+        e.preventDefault();
+        setSearch("");
+        setActiveCategory(null);
+        window.history.pushState({}, "", "/");
+      }}
+    >
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path fillRule="evenodd" clipRule="evenodd" d="M0 12L12 9.45516V0L0 2.57459V12Z" fill="white" />
+      </svg>
+      <span className="text-xs font-semibold text-foreground tracking-tight">Design.Index</span>
+    </a>
+  );
+
+  const accountLockup = (
+    <div className="ml-auto shrink-0 flex items-center gap-3">
+      <div className="text-right leading-tight">
+        <p className="text-xs font-semibold text-foreground">Khoi Uong</p>
+        <p className="text-xs text-muted">khoi@stripe.com</p>
+      </div>
+      <div aria-hidden className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-[10px] font-semibold text-muted">
+        KU
+      </div>
+    </div>
+  );
+
+  const librarySelectorMenu = (
+    <div className="relative inline-block">
+      <button
+        onClick={toggleLibraryMenu}
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showLibraryMenu ? "text-foreground bg-background border !border-border" : ""}`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <span className="font-medium tracking-tight">Library: {activeLibraryLabel}</span>
+      </button>
+      {showLibraryMenu && (
+        <div ref={libraryMenuRef} className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-56 max-h-64 overflow-y-auto shadow-lg ${libraryMenuClosing ? "menu-spring-exit" : "menu-spring-enter"}`}>
+          <button onClick={() => { setActiveLibrary(null); closeLibraryMenu(); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${!activeLibrary ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>All</button>
+          {libraries.map((lib) => (
+            <button key={lib.id} onClick={() => { setActiveLibrary(lib.id); closeLibraryMenu(); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${activeLibrary === lib.id ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>{lib.name}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const typeFilterMenu = (
+    <div className="relative inline-block">
+      <button
+        onClick={toggleTypeMenu}
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showTypeMenu ? "text-foreground bg-background border !border-border" : ""}`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <span className="font-medium tracking-tight">Type: {activeCategoryLabel}</span>
+      </button>
+      {showTypeMenu && (
+        <div ref={typeMenuRef} className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${typeMenuClosing ? "menu-spring-exit" : "menu-spring-enter"}`}>
+          {CATEGORIES.map((cat) => (
+            <button key={cat.label} onClick={() => { setActiveCategory(cat.value); closeTypeMenu(); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${activeCategory === cat.value ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>{cat.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const statusFilterMenu = (
+    <div className="relative inline-block">
+      <button
+        onClick={toggleStatusMenu}
+        className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showStatusMenu ? "text-foreground bg-background border !border-border" : ""}`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <span className="font-medium tracking-tight">Status: {activeStatusLabel}</span>
+      </button>
+      {showStatusMenu && (
+        <div ref={statusMenuRef} className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${statusMenuClosing ? "menu-spring-exit" : "menu-spring-enter"}`}>
+          {STATUS_OPTIONS.map((opt) => (
+            <button key={opt.label} onClick={() => { setActiveStatus(opt.value); closeStatusMenu(); }} className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors flex items-center gap-2 ${activeStatus === opt.value ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"}`}>
+              <span className="shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const dateRangeControl = (
+    <DateRangePicker value={dateRange} onChange={setDateRange} open={showDatePicker} onOpenChange={handleDatePickerOpenChange} />
+  );
+
+  const countBadge = (
+    <span className="text-xs text-neutral-400 py-1 px-2 bg-neutral-900 rounded-[3px]">
+      {loading ? "..." : patterns.length}
+    </span>
+  );
+
+  const filterBarBase = `sticky top-[60px] z-40 bg-content-bg -mx-8 px-8 py-2 transition-transform duration-200 ease-out ${filterSticky ? "translate-y-0" : "-translate-y-full"}`;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="max-w-[1400px] mx-auto px-8 h-[60px] flex items-center relative">
-          <a
-            href="/"
-            className="flex items-center gap-2 shrink-0"
-            onClick={(e) => {
-              e.preventDefault();
-              setSearch("");
-              setActiveCategory(null);
-              window.history.pushState({}, "", "/");
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M0 12L12 9.45516V0L0 2.57459V12Z"
-                fill="white"
-              />
-            </svg>
-            <span className="text-xs font-semibold text-foreground tracking-tight">
-              Design.Index
-            </span>
-          </a>
-
-          <div className="absolute left-1/2 -translate-x-1/2 top-3">
-            <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} />
-          </div>
-
-          <div className="ml-auto shrink-0 flex items-center gap-3">
-            <div className="text-right leading-tight">
-              <p className="text-xs font-semibold text-foreground">Khoi Uong</p>
-              <p className="text-xs text-muted">khoi@stripe.com</p>
+          {logoLink}
+          {protoLayout === "current" ? (
+            <div className="absolute left-1/2 -translate-x-1/2 top-3">
+              <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} />
             </div>
-            <div
-              aria-hidden
-              className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-[10px] font-semibold text-muted"
-            >
-              KU
-            </div>
-          </div>
+          ) : (
+            <nav className="flex items-center gap-4 ml-8">
+              {libraries.map((lib) => (
+                <a key={lib.id} href={`/libraries/${lib.slug}`} className="text-xs text-muted hover:text-foreground transition-colors">{lib.name}</a>
+              ))}
+            </nav>
+          )}
+          {accountLockup}
         </div>
       </header>
 
       <main className="bg-content-bg min-h-[calc(100vh-60px)]">
         <div className="max-w-[1400px] mx-auto p-8">
-          {/* Filter Bar */}
-          <div
-            ref={filterRef}
-            className={`flex items-center justify-between gap-4 sticky top-[60px] z-40 bg-content-bg -mx-8 px-8 py-2 transition-transform duration-200 ease-out ${
-              filterSticky ? "translate-y-0" : "-translate-y-full"
-            }`}
-          >
-            {/* Left: Filters + count */}
-            <div className="flex items-center gap-1.5 flex-1">
-              {/* Type filter */}
-              <div className="relative inline-block order-2">
-                <button
-                  onClick={toggleTypeMenu}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showTypeMenu ? "text-foreground bg-background border !border-border" : ""}`}
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <span className="font-medium tracking-tight">
-                    Type: {activeCategoryLabel}
-                  </span>
-                </button>
-
-                {showTypeMenu && (
-                  <div
-                    ref={typeMenuRef}
-                    className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
-                      typeMenuClosing ? "menu-spring-exit" : "menu-spring-enter"
-                    }`}
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.label}
-                        onClick={() => {
-                          setActiveCategory(cat.value);
-                          closeTypeMenu();
-                        }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                          activeCategory === cat.value
-                            ? "bg-accent text-white font-medium"
-                            : "text-foreground hover:bg-surface-hover"
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+          {protoLayout === "current" ? (
+            <div ref={filterRef} className={`flex items-center justify-between gap-4 ${filterBarBase}`}>
+              <div className="flex items-center gap-1.5 flex-1">
+                <div className="order-1">{librarySelectorMenu}</div>
+                <div className="order-2">{typeFilterMenu}</div>
+                <div className="order-3">{statusFilterMenu}</div>
+                <div className="order-4">{countBadge}</div>
               </div>
-
-              {/* Library filter */}
-              <div className="relative inline-block order-1">
-                <button
-                  onClick={toggleLibraryMenu}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showLibraryMenu ? "text-foreground bg-background border !border-border" : ""}`}
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <span className="font-medium tracking-tight">
-                    Library: {activeLibraryLabel}
-                  </span>
-                </button>
-
-                {showLibraryMenu && (
-                  <div
-                    ref={libraryMenuRef}
-                    className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-56 max-h-64 overflow-y-auto shadow-lg ${
-                      libraryMenuClosing ? "menu-spring-exit" : "menu-spring-enter"
-                    }`}
-                  >
-                    <button
-                      onClick={() => {
-                        setActiveLibrary(null);
-                        closeLibraryMenu();
-                      }}
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                        !activeLibrary ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"
-                      }`}
-                    >
-                      All
-                    </button>
-                    {libraries.map((lib) => (
-                      <button
-                        key={lib.id}
-                        onClick={() => {
-                          setActiveLibrary(lib.id);
-                          closeLibraryMenu();
-                        }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                          activeLibrary === lib.id ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"
-                        }`}
-                      >
-                        {lib.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="flex items-center gap-1.5">
+                {dateRangeControl}
               </div>
-
-              {/* Status filter */}
-              <div className="relative inline-block order-3">
-                <button
-                  onClick={toggleStatusMenu}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-[4px] text-muted hover:text-foreground hover:bg-background hover:border hover:border-border transition-colors border border-transparent ${showStatusMenu ? "text-foreground bg-background border !border-border" : ""}`}
-                >
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <span className="font-medium tracking-tight">
-                    Status: {activeStatusLabel}
-                  </span>
-                </button>
-
-                {showStatusMenu && (
-                  <div
-                    ref={statusMenuRef}
-                    className={`absolute top-full left-0 mt-1 bg-background border border-border rounded-lg p-2 z-50 w-48 shadow-lg ${
-                      statusMenuClosing ? "menu-spring-exit" : "menu-spring-enter"
-                    }`}
-                  >
-                    {STATUS_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.label}
-                        onClick={() => {
-                          setActiveStatus(opt.value);
-                          closeStatusMenu();
-                        }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                          activeStatus === opt.value
-                            ? "bg-accent text-white font-medium"
-                            : "text-foreground hover:bg-surface-hover"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <span className="text-xs text-muted py-1 px-2 order-4">
-                {loading ? "..." : patterns.length}
-              </span>
             </div>
-
-            {/* Right: Date range picker */}
-            <div className="flex items-center gap-1.5">
-              <DateRangePicker value={dateRange} onChange={setDateRange} open={showDatePicker} onOpenChange={handleDatePickerOpenChange} />
+          ) : (
+            <div ref={filterRef} className={`flex items-center gap-6 ${filterBarBase}`}>
+              <div className="flex-1 min-w-0">
+                <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} className="w-full" />
+              </div>
+              <div className="shrink-0 flex items-center gap-1.5">
+                {librarySelectorMenu}
+                {typeFilterMenu}
+                {statusFilterMenu}
+                {dateRangeControl}
+                {countBadge}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="pt-1" />
           <PatternGrid
@@ -475,6 +430,8 @@ export default function HomePage() {
           />
         </div>
       </main>
+
+      <ProtoControls layout={protoLayout} onLayoutChange={setProtoLayout} />
     </div>
   );
 }

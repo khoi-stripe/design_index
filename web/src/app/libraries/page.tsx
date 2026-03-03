@@ -6,7 +6,7 @@ import type { Library } from "@/lib/types";
 
 const STATUS_OPTIONS = [
   { value: "official", label: "Official" },
-  { value: "community", label: "Community" },
+  { value: "community", label: "In-use" },
   { value: "concept", label: "Concept" },
 ] as const;
 
