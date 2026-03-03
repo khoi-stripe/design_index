@@ -29,6 +29,16 @@
       "status": "official",
       "createdAt": "2026-03-03T03:04:06.342Z",
       "updatedAt": "2026-03-03T03:04:06.342Z"
+    },
+    {
+      "id": "44fe2622-cb8f-40be-9d96-c22a651379d2",
+      "name": "Workbench",
+      "slug": "workbench",
+      "team": "",
+      "description": "",
+      "status": "in-use",
+      "createdAt": "2026-03-03T18:09:18.437Z",
+      "updatedAt": "2026-03-03T18:32:54.296Z"
     }
   ],
   "patterns": [
@@ -68,9 +78,9 @@
       "category": "component",
       "status": "in-use",
       "featured": false,
-      "libraryId": null,
+      "libraryId": "44fe2622-cb8f-40be-9d96-c22a651379d2",
       "createdAt": "2026-03-02T18:18:15.655Z",
-      "updatedAt": "2026-03-02T18:19:25.563Z"
+      "updatedAt": "2026-03-03T18:27:38.627Z"
     },
     {
       "id": "9a9ae441-c4ef-461f-80bc-115edd382ce6",
@@ -128,9 +138,9 @@
       "category": "flow",
       "status": "in-use",
       "featured": false,
-      "libraryId": null,
+      "libraryId": "0a2a6649-d98e-4bcd-a947-ba0ffeaeb97b",
       "createdAt": "2026-03-01T21:40:46.154Z",
-      "updatedAt": "2026-03-01T21:40:46.154Z"
+      "updatedAt": "2026-03-03T18:37:08.424Z"
     },
     {
       "id": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
@@ -148,9 +158,9 @@
       "category": "flow",
       "status": "in-use",
       "featured": false,
-      "libraryId": null,
+      "libraryId": "0a2a6649-d98e-4bcd-a947-ba0ffeaeb97b",
       "createdAt": "2026-03-01T15:54:35.631Z",
-      "updatedAt": "2026-03-01T18:15:45.813Z"
+      "updatedAt": "2026-03-03T18:36:50.285Z"
     },
     {
       "id": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
@@ -168,9 +178,9 @@
       "category": "flow",
       "status": "in-use",
       "featured": false,
-      "libraryId": null,
+      "libraryId": "0a2a6649-d98e-4bcd-a947-ba0ffeaeb97b",
       "createdAt": "2026-03-01T15:49:10.290Z",
-      "updatedAt": "2026-03-01T15:49:10.290Z"
+      "updatedAt": "2026-03-03T18:36:58.072Z"
     },
     {
       "id": "68675fa4-620d-495e-ba96-85cf2082dcc9",
@@ -228,9 +238,9 @@
       "category": "component",
       "status": "in-use",
       "featured": false,
-      "libraryId": null,
+      "libraryId": "44fe2622-cb8f-40be-9d96-c22a651379d2",
       "createdAt": "2026-03-01T00:58:32.421Z",
-      "updatedAt": "2026-03-01T23:52:11.932Z"
+      "updatedAt": "2026-03-03T18:28:28.828Z"
     },
     {
       "id": "d4e5f4a3-05f6-46bc-8cd9-dcaacf35d3d7",
@@ -1417,66 +1427,6 @@
       "tagId": "9311db6f-0791-406e-9214-8707020d9999"
     },
     {
-      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
-      "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
-    },
-    {
-      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
-      "tagId": "1dae9e8e-5292-4500-8971-3fabb2c4ead4"
-    },
-    {
-      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
-      "tagId": "e3d6ac4a-90d8-43cf-9005-633bd2afd0dc"
-    },
-    {
-      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
-      "tagId": "ee3ca2f4-57cc-4856-96a6-8f20235b8d73"
-    },
-    {
-      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
-      "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
-    },
-    {
-      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
-      "tagId": "2de797f3-a404-4b13-8e51-36a330dd0686"
-    },
-    {
-      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
-      "tagId": "8c90ad6b-fa59-4a38-a6d8-1c855c27eaad"
-    },
-    {
-      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
-      "tagId": "3cfabe79-5ef9-4040-9396-a463a14b1fd1"
-    },
-    {
-      "patternId": "1a85a860-d443-4a45-9409-779d5bbf56a7",
-      "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
-    },
-    {
-      "patternId": "1a85a860-d443-4a45-9409-779d5bbf56a7",
-      "tagId": "847161aa-5957-4f58-9d60-254e36d66479"
-    },
-    {
-      "patternId": "1a85a860-d443-4a45-9409-779d5bbf56a7",
-      "tagId": "ee3ca2f4-57cc-4856-96a6-8f20235b8d73"
-    },
-    {
-      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
-      "tagId": "3f1b0ff4-33c0-43e1-bc33-be5fbc1903c6"
-    },
-    {
-      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
-      "tagId": "7a82e9bd-c4c3-4b24-9472-7ce932ec6c62"
-    },
-    {
-      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
-      "tagId": "7eacdcca-2879-4819-99cc-78c93710f138"
-    },
-    {
-      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
-      "tagId": "9c8203d3-e305-40fe-83f3-9a99ec581f44"
-    },
-    {
       "patternId": "07dd4689-2655-4961-b15f-54b4a431f2fd",
       "tagId": "9fb150b8-e727-42ea-9b49-a6d457026a5a"
     },
@@ -1491,6 +1441,18 @@
     {
       "patternId": "9a9ae441-c4ef-461f-80bc-115edd382ce6",
       "tagId": "c2422005-8607-4242-a5b8-426a5f782c5d"
+    },
+    {
+      "patternId": "83e5fca1-8058-42ce-a2d2-1dbcd467f94c",
+      "tagId": "492b08e1-1167-4e20-9305-eed2d3d3a7bf"
+    },
+    {
+      "patternId": "83e5fca1-8058-42ce-a2d2-1dbcd467f94c",
+      "tagId": "5fff2bea-5c6e-439d-8720-07874aef3f48"
+    },
+    {
+      "patternId": "83e5fca1-8058-42ce-a2d2-1dbcd467f94c",
+      "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
     },
     {
       "patternId": "6a859777-9ea9-4af8-bdf4-44b2716ff289",
@@ -1509,16 +1471,64 @@
       "tagId": "7eacdcca-2879-4819-99cc-78c93710f138"
     },
     {
-      "patternId": "83e5fca1-8058-42ce-a2d2-1dbcd467f94c",
-      "tagId": "492b08e1-1167-4e20-9305-eed2d3d3a7bf"
+      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
+      "tagId": "3f1b0ff4-33c0-43e1-bc33-be5fbc1903c6"
     },
     {
-      "patternId": "83e5fca1-8058-42ce-a2d2-1dbcd467f94c",
-      "tagId": "5fff2bea-5c6e-439d-8720-07874aef3f48"
+      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
+      "tagId": "7a82e9bd-c4c3-4b24-9472-7ce932ec6c62"
     },
     {
-      "patternId": "83e5fca1-8058-42ce-a2d2-1dbcd467f94c",
+      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
+      "tagId": "7eacdcca-2879-4819-99cc-78c93710f138"
+    },
+    {
+      "patternId": "b359e807-11d8-4f6b-b770-b480e255b810",
+      "tagId": "9c8203d3-e305-40fe-83f3-9a99ec581f44"
+    },
+    {
+      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
+      "tagId": "2de797f3-a404-4b13-8e51-36a330dd0686"
+    },
+    {
+      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
+      "tagId": "3cfabe79-5ef9-4040-9396-a463a14b1fd1"
+    },
+    {
+      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
+      "tagId": "8c90ad6b-fa59-4a38-a6d8-1c855c27eaad"
+    },
+    {
+      "patternId": "9c72585e-b8eb-4a4a-aa4c-76d6f2c28bf5",
       "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
+    },
+    {
+      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
+      "tagId": "1dae9e8e-5292-4500-8971-3fabb2c4ead4"
+    },
+    {
+      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
+      "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
+    },
+    {
+      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
+      "tagId": "e3d6ac4a-90d8-43cf-9005-633bd2afd0dc"
+    },
+    {
+      "patternId": "173bc0b1-bb09-46b3-9412-d8aa452e208d",
+      "tagId": "ee3ca2f4-57cc-4856-96a6-8f20235b8d73"
+    },
+    {
+      "patternId": "1a85a860-d443-4a45-9409-779d5bbf56a7",
+      "tagId": "847161aa-5957-4f58-9d60-254e36d66479"
+    },
+    {
+      "patternId": "1a85a860-d443-4a45-9409-779d5bbf56a7",
+      "tagId": "cc9c1085-d7e4-47a0-95ef-00b59402b2a9"
+    },
+    {
+      "patternId": "1a85a860-d443-4a45-9409-779d5bbf56a7",
+      "tagId": "ee3ca2f4-57cc-4856-96a6-8f20235b8d73"
     }
   ],
   "patternImages": [
