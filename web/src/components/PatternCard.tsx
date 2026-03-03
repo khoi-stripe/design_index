@@ -232,8 +232,7 @@ export function PatternCard({
                 <MetadataChip
                   label={pattern.library.name}
                   icon={<LibraryIcon />}
-                  className="shrink-0"
-                  href={`/libraries/${pattern.library.slug}`}
+                  className="shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e?.preventDefault();
                     e?.stopPropagation();
