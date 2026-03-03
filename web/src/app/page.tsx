@@ -265,13 +265,6 @@ export default function HomePage() {
   const activeStatusLabel =
     STATUS_OPTIONS.find((s) => s.value === activeStatus)?.label || "All";
 
-  const librariesByTeam = libraries.reduce<Record<string, Library[]>>((acc, lib) => {
-    const team = lib.team || "Other";
-    if (!acc[team]) acc[team] = [];
-    acc[team].push(lib);
-    return acc;
-  }, {});
-
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background border-b border-border">
@@ -303,12 +296,18 @@ export default function HomePage() {
             <SearchBar value={search} onChange={setSearch} filters={filters} onFiltersChange={setFilters} />
           </div>
 
-          <a
-            href="/libraries"
-            className="ml-auto text-xs text-muted hover:text-foreground transition-colors shrink-0"
-          >
-            Libraries
-          </a>
+          <div className="ml-auto shrink-0 flex items-center gap-3">
+            <div className="text-right leading-tight">
+              <p className="text-xs font-semibold text-foreground">Khoi Uong</p>
+              <p className="text-xs text-muted">khoi@stripe.com</p>
+            </div>
+            <div
+              aria-hidden
+              className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-[10px] font-semibold text-muted"
+            >
+              KU
+            </div>
+          </div>
         </div>
       </header>
 
@@ -396,28 +395,19 @@ export default function HomePage() {
                     >
                       All
                     </button>
-                    {Object.entries(librariesByTeam).map(([team, libs]) => (
-                      <div key={team}>
-                        {Object.keys(librariesByTeam).length > 1 && (
-                          <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted/70 mt-2 first:mt-0">
-                            {team}
-                          </div>
-                        )}
-                        {libs.map((lib) => (
-                          <button
-                            key={lib.id}
-                            onClick={() => {
-                              setActiveLibrary(lib.id);
-                              closeLibraryMenu();
-                            }}
-                            className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
-                              activeLibrary === lib.id ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"
-                            }`}
-                          >
-                            {lib.name}
-                          </button>
-                        ))}
-                      </div>
+                    {libraries.map((lib) => (
+                      <button
+                        key={lib.id}
+                        onClick={() => {
+                          setActiveLibrary(lib.id);
+                          closeLibraryMenu();
+                        }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded-[4px] transition-colors ${
+                          activeLibrary === lib.id ? "bg-accent text-white font-medium" : "text-foreground hover:bg-surface-hover"
+                        }`}
+                      >
+                        {lib.name}
+                      </button>
                     ))}
                   </div>
                 )}
