@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const baseClass =
-  "inline-block px-2.5 py-1 text-xs font-medium bg-accent/15 text-accent rounded-[4px] lowercase";
+  "inline-block px-2.5 py-1 text-xs font-medium bg-accent/10 text-brand-400 rounded-[4px] lowercase";
 
 export function MetadataChip({
   label,

@@ -15,13 +15,26 @@
   --neutral-800: #273951;
   --neutral-900: #1A2C44;
 
+  /* Brand (purple) scale */
+  --brand-25: #F7F5FD;
+  --brand-50: #EFECFC;
+  --brand-100: #E0D9FB;
+  --brand-200: #C3B6FB;
+  --brand-300: #A497FC;
+  --brand-400: #857AFE;
+  --brand-500: #675DFF;
+  --brand-600: #533AFD;
+  --brand-700: #4E11E2;
+  --brand-800: #44139F;
+  --brand-900: #2F0E63;
+
   /* Semantic tokens */
   --background: #0b0b0f;
   --content-bg: #0f0f14;
   --foreground: var(--neutral-300);
   --foreground-bright: var(--neutral-100);
-  --accent: #533AFD;
-  --accent-hover: #4E11E2;
+  --accent: var(--brand-600);
+  --accent-hover: var(--brand-700);
   --border: var(--neutral-900);
   --muted: var(--neutral-500);
   --card-bg: #000000;
@@ -43,6 +56,19 @@
   --color-neutral-700: var(--neutral-700);
   --color-neutral-800: var(--neutral-800);
   --color-neutral-900: var(--neutral-900);
+
+  /* Brand (purple) scale */
+  --color-brand-25: var(--brand-25);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
 
   /* Semantic tokens */
   --color-background: var(--background);
