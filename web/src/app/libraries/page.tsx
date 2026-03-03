@@ -35,7 +35,7 @@ export default function LibrariesPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/libraries");
+      const res = await fetch("/api/libraries", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch libraries");
       const data = await res.json();
       setLibraries(data);
@@ -166,11 +166,11 @@ export default function LibrariesPage() {
                 fill="currentColor"
               />
             </svg>
-            <span className="text-xs font-semibold tracking-tight">Design.Index</span>
+            <span className="text-[13px] font-semibold tracking-tight">Design.Index</span>
           </Link>
           <button
             onClick={openCreate}
-            className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors"
+            className="px-3 py-1.5 text-[13px] font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors"
           >
             New library
           </button>

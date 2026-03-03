@@ -121,7 +121,7 @@ export function Breadcrumb({
             fill="currentColor"
           />
         </svg>
-        <span className="text-xs font-semibold tracking-tight">Design.Index</span>
+        <span className="text-[13px] font-semibold tracking-tight">Design.Index</span>
       </button>
 
       {showOriginCrumb && (
@@ -129,7 +129,7 @@ export function Breadcrumb({
           <span className="text-muted shrink-0">&rarr;</span>
           <button
             onClick={handleOriginClick}
-            className="text-muted hover:text-foreground transition-colors text-xs truncate max-w-[160px]"
+            className="text-muted hover:text-foreground transition-colors text-[13px] truncate max-w-[160px]"
           >
             {origin!.label}
           </button>
@@ -142,14 +142,14 @@ export function Breadcrumb({
           {item === "ellipsis" ? (
             <button
               onClick={() => setExpanded(true)}
-              className="text-muted hover:text-foreground transition-colors text-xs px-1"
+              className="text-muted hover:text-foreground transition-colors text-[13px] px-1"
             >
               ...
             </button>
           ) : (
             <button
               onClick={() => handleCrumbClick(item)}
-              className="text-muted hover:text-foreground transition-colors text-xs truncate max-w-[160px]"
+              className="text-muted hover:text-foreground transition-colors text-[13px] truncate max-w-[160px]"
             >
               {item.title}
             </button>
@@ -160,7 +160,7 @@ export function Breadcrumb({
       {currentCrumb && (
         <span className="flex items-center gap-1.5 min-w-0">
           <span className="text-muted shrink-0">&rarr;</span>
-          <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
+          <span className="text-foreground text-[13px] font-medium truncate max-w-[200px]">
             {currentCrumb.title}
           </span>
         </span>

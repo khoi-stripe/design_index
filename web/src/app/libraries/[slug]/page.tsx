@@ -128,7 +128,7 @@ export default function LibraryDetailPage() {
   const fetchLibrary = useCallback(async () => {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/libraries/${slug}`);
+      const res = await fetch(`/api/libraries/${slug}`, { cache: "no-store" });
       if (!res.ok) {
         if (res.status === 404) setError("Library not found");
         else setError("Failed to load library");
@@ -172,7 +172,7 @@ export default function LibraryDetailPage() {
     const params = buildParams(0);
     if (!params) return;
     setPatternsLoading(true);
-    const res = await fetch(`/api/patterns?${params}`);
+    const res = await fetch(`/api/patterns?${params}`, { cache: "no-store" });
     const data = await res.json();
     setPatterns(data.patterns);
     setTotal(data.total);
@@ -184,7 +184,7 @@ export default function LibraryDetailPage() {
     const params = buildParams(patterns.length);
     if (!params) return;
     setLoadingMore(true);
-    const res = await fetch(`/api/patterns?${params}`);
+    const res = await fetch(`/api/patterns?${params}`, { cache: "no-store" });
     const data = await res.json();
     setPatterns((prev) => [...prev, ...data.patterns]);
     setTotal(data.total);
@@ -195,6 +195,9 @@ export default function LibraryDetailPage() {
     if (!slug) return;
     setLoading(true);
     setError(null);
+    setPatterns([]);
+    setTotal(0);
+    setLibrary(null);
     fetchLibrary().finally(() => setLoading(false));
   }, [slug, fetchLibrary]);
 
@@ -372,7 +375,7 @@ export default function LibraryDetailPage() {
               <button
                 onClick={deleteLibrary}
                 disabled={deleting}
-                className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-[4px] transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-[13px] font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-[4px] transition-colors disabled:opacity-50"
               >
                 {deleting ? "Deleting..." : "Delete library"}
               </button>
@@ -390,10 +393,10 @@ export default function LibraryDetailPage() {
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="text-xs font-semibold tracking-tight">Design.Index</span>
+                  <span className="text-[13px] font-semibold tracking-tight">Design.Index</span>
                 </Link>
                 <span className="text-muted shrink-0">&rarr;</span>
-                <span className="text-foreground text-xs font-medium truncate max-w-[200px]">
+                <span className="text-foreground text-[13px] font-medium truncate max-w-[200px]">
                   {library.name}
                 </span>
               </>
@@ -404,14 +407,14 @@ export default function LibraryDetailPage() {
               <>
                 <button
                   onClick={cancelEditing}
-                  className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
+                  className="px-3 py-1.5 text-[13px] font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveChanges}
                   disabled={saving}
-                  className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 text-[13px] font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save changes"}
                 </button>
@@ -419,7 +422,7 @@ export default function LibraryDetailPage() {
             ) : (
               <button
                 onClick={startEditing}
-                className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
+                className="px-3 py-1.5 text-[13px] font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
               >
                 Edit
               </button>

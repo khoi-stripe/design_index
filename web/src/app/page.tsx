@@ -149,7 +149,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/libraries")
+    fetch("/api/libraries", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => setLibraries(Array.isArray(data) ? data : []));
   }, []);
@@ -185,7 +185,7 @@ export default function HomePage() {
 
   const fetchPatterns = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/patterns?${buildParams(0)}`);
+    const res = await fetch(`/api/patterns?${buildParams(0)}`, { cache: "no-store" });
     const data = await res.json();
     setPatterns(data.patterns);
     setTotal(data.total);
@@ -195,7 +195,7 @@ export default function HomePage() {
   const loadMore = useCallback(async () => {
     if (loadingMore || patterns.length >= total) return;
     setLoadingMore(true);
-    const res = await fetch(`/api/patterns?${buildParams(patterns.length)}`);
+    const res = await fetch(`/api/patterns?${buildParams(patterns.length)}`, { cache: "no-store" });
     const data = await res.json();
     setPatterns((prev) => [...prev, ...data.patterns]);
     setTotal(data.total);
@@ -303,7 +303,7 @@ export default function HomePage() {
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
         <path fillRule="evenodd" clipRule="evenodd" d="M0 12L12 9.45516V0L0 2.57459V12Z" fill="white" />
       </svg>
-      <span className="text-xs font-semibold text-foreground tracking-tight">Design.Index</span>
+      <span className="text-[13px] font-semibold text-foreground tracking-tight">Design.Index</span>
     </a>
   );
 
@@ -404,7 +404,7 @@ export default function HomePage() {
           ) : (
             <nav className="flex items-center gap-4 ml-8">
               {libraries.map((lib) => (
-                <a key={lib.id} href={`/libraries/${lib.slug}`} className="text-xs text-muted hover:text-foreground transition-colors">{lib.name}</a>
+                <a key={lib.id} href={`/libraries/${lib.slug}`} className="text-[13px] text-muted hover:text-foreground transition-colors">{lib.name}</a>
               ))}
             </nav>
           )}

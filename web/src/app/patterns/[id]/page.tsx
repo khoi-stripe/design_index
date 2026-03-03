@@ -247,7 +247,7 @@ export default function PatternDetailPage() {
   const fetchPattern = useCallback(() => {
     const visitorId = getVisitorId();
     const url = visitorId ? `/api/patterns/${id}?visitorId=${encodeURIComponent(visitorId)}` : `/api/patterns/${id}`;
-    fetch(url)
+    fetch(url, { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         setPattern(data.pattern);
@@ -257,13 +257,17 @@ export default function PatternDetailPage() {
   }, [id]);
 
   useEffect(() => {
+    setPattern(null);
+    setRelated([]);
+    setLoading(true);
+    setActiveImageIndex(0);
     fetchPattern();
     setRelCategory(null);
     setRelStatus(null);
   }, [fetchPattern]);
 
   useEffect(() => {
-    fetch("/api/libraries")
+    fetch("/api/libraries", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => setLibraries(Array.isArray(data) ? data : []));
   }, []);
@@ -512,7 +516,7 @@ export default function PatternDetailPage() {
           {editing ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-3 py-1.5 text-xs font-medium text-red-400 bg-surface hover:bg-red-500/10 rounded-[4px] transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium text-red-400 bg-surface hover:bg-red-500/10 rounded-[4px] transition-colors"
             >
               Delete
             </button>
@@ -524,14 +528,14 @@ export default function PatternDetailPage() {
               <>
                 <button
                   onClick={cancelEditing}
-                  className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
+                  className="px-3 py-1.5 text-[13px] font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveChanges}
                   disabled={saving}
-                  className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 text-[13px] font-medium bg-accent text-white rounded-[4px] hover:bg-accent-hover transition-colors disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save changes"}
                 </button>
@@ -540,7 +544,7 @@ export default function PatternDetailPage() {
               <>
                 <button
                   onClick={startEditing}
-                  className="px-3 py-1.5 text-xs font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
+                  className="px-3 py-1.5 text-[13px] font-medium text-foreground bg-surface hover:bg-surface-hover rounded-[4px] transition-colors"
                 >
                   Edit
                 </button>
